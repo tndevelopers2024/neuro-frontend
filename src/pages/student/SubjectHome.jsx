@@ -170,13 +170,16 @@ const SubjectHome = () => {
   const categories = useMemo(() => {
     return rawCategories.map((c, idx) => {
       const fallback = DEFAULT_CATEGORIES[idx % DEFAULT_CATEGORIES.length];
+      const nameStr = (c.name || c.title || fallback.name).toLowerCase();
+      const isCoreDomain = ['psychiatry', 'therapy', 'addiction', 'biology', 'forensic', 'community', 'pharmacology', 'special', 'clp'].some(k => nameStr.includes(k)) && !nameStr.includes('test');
+
       return {
         _id: c._id || c.id || fallback._id,
         name: c.name || c.title || fallback.name,
         slug: c.slug || fallback.slug,
         icon: c.icon || fallback.icon,
         color: c.color || c.themeColor || fallback.color,
-        subtopics: c.subtopics || fallback.subtopics || [],
+        subtopics: c.subtopics || (isCoreDomain ? fallback.subtopics : []),
       };
     });
   }, [rawCategories]);
