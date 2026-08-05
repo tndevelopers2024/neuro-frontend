@@ -1,50 +1,102 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, Upload, Trash2, Video, File, Save, CheckCircle, Edit, HelpCircle, Sparkles, Plus, Layers, Play, BookOpen, CheckCircle2 } from 'lucide-react';
+import { FileText, Upload, Trash2, Video, File, Save, CheckCircle, Edit, HelpCircle, Sparkles, Plus, Layers, Play, BookOpen, CheckCircle2, Search, Filter, X, Table, PlusCircle, RotateCcw } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 
-// Realistic default study materials matching our Screen 4 video & reading notes experience
-const DEFAULT_MATERIALS = [
-  { _id: 'mat-101', title: 'Evolution of ASD Concepts (Kanner & Asperger)', type: 'VIDEO', topic: { _id: 'less-301', title: 'History of ASD' }, duration: '24 min video', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', description: 'Detailed visual lecture review of 1943 diagnostic paradigms and DSM revisions over decades.' },
-  { _id: 'mat-102', title: 'Historical Foundations of ASD - High Yield Notes', type: 'NOTES', topic: { _id: 'less-301', title: 'History of ASD' }, duration: '6 page synthesis', richTextContent: '<h2 class="text-xl font-bold">Historical Overview</h2><p>Synthesizing early descriptions by Eugen Bleuler and Leo Kanner...</p>', description: 'Structured reading notes with comparative timeline tables and clinical practice pearls.' },
-  { _id: 'mat-103', title: 'Pharmacological Intervention Protocols for Autism & ADHD', type: 'PDF', topic: { _id: 'less-303', title: 'Pharmacological Management' }, duration: '12 page PDF', fileUrl: '/uploads/pdfs/pharma_guidelines.pdf', description: 'Downloadable clinical drug dosage tables and FDA-approved irritability management guidelines.' },
-  { _id: 'mat-104', title: 'Neurobiological Etiology & Synaptic Pruning Lecture', type: 'VIDEO', topic: { _id: 'less-302', title: 'Etiology & Neurobiology' }, duration: '32 min video', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', description: 'High-definition molecular exploration of genetic risk alleles and neurodevelopmental pathology.' }
-];
-
-// Realistic default practice MCQs matching our Screen 4 Quiz engine
-const DEFAULT_MCQS = [
-  { _id: 'mcq-101', topic: { _id: 'less-301', title: 'History of ASD' }, question: 'Who originally coined the term "autism" in the psychiatric literature in 1911?', optionA: 'Leo Kanner', optionB: 'Hans Asperger', optionC: 'Eugen Bleuler', optionD: 'Sigmund Freud', correctAnswer: 'C', difficulty: 'Easy', explanation: 'Eugen Bleuler first introduced the term in 1911 to delineate social withdrawal observed in schizophrenia.' },
-  { _id: 'mcq-102', topic: { _id: 'less-301', title: 'History of ASD' }, question: 'Which edition of the Diagnostic and Statistical Manual (DSM) first separated Autism from Childhood Schizophrenia?', optionA: 'DSM-I (1952)', optionB: 'DSM-II (1968)', optionC: 'DSM-III (1980)', optionD: 'DSM-IV (1994)', correctAnswer: 'C', difficulty: 'Medium', explanation: 'DSM-III (1980) formally distinguished autism from schizophrenia spectra under PDD.' },
-  { _id: 'mcq-103', topic: { _id: 'less-303', title: 'Pharmacological Management' }, question: 'Which of the following atypical antipsychotics is FDA-approved specifically for irritability associated with autism in pediatric patients?', optionA: 'Clozapine & Olanzapine', optionB: 'Risperidone & Aripiprazole', optionC: 'Quetiapine & Ziprasidone', optionD: 'Haloperidol & Chlorpromazine', correctAnswer: 'B', difficulty: 'Hard', explanation: 'Risperidone (ages 5+) and Aripiprazole (ages 6+) are the only two medications formally approved by the FDA for autistic irritability.' },
-];
-
 const ManageMaterials = () => {
-  const [activeTab, setActiveTab] = useState('MATERIALS'); // 'MATERIALS' | 'MCQS'
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Derive active tab directly from URL pathname set by sidebar navigation
+  const activeTab = location.pathname.includes('/materials/upload') ? 'UPLOAD_MATERIALS' :
+                    location.pathname.includes('/materials/table') ? 'TABLE_MATERIALS' :
+                    location.pathname.includes('/mcqs/create') ? 'UPLOAD_MCQS' :
+                    location.pathname.includes('/mcqs/table') ? 'TABLE_MCQS' :
+                    location.pathname.includes('/mcqs') ? 'TABLE_MCQS' : 'TABLE_MATERIALS';
   
   // Materials state
   const [matForm, setMatForm] = useState({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '24 min' });
   const [editingMatId, setEditingMatId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedMatSubject, setSelectedMatSubject] = useState('');
+  const [selectedMatCategory, setSelectedMatCategory] = useState('');
+  const [selectedMatSubtopic, setSelectedMatSubtopic] = useState('');
+  const [selectedMatSubSubtopic, setSelectedMatSubSubtopic] = useState('');
 
   // MCQs state
   const [mcqForm, setMcqForm] = useState({ topic: '', question: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'C', difficulty: 'Medium', explanation: '' });
   const [editingMcqId, setEditingMcqId] = useState(null);
+  const [selectedMcqSubject, setSelectedMcqSubject] = useState('');
+  const [selectedMcqCategory, setSelectedMcqCategory] = useState('');
+  const [selectedMcqSubtopic, setSelectedMcqSubtopic] = useState('');
+  const [selectedMcqSubSubtopic, setSelectedMcqSubSubtopic] = useState('');
 
   const queryClient = useQueryClient();
 
-  // Fetch topics to associate materials & MCQs
+  // 1. Fetch Subjects
+  const { data: subData } = useQuery({
+    queryKey: ['allSubjectsAdmin'],
+    queryFn: () => api.get('/subjects'),
+    staleTime: 60 * 1000,
+  });
+  const subjects = useMemo(() => subData?.subjects || [], [subData]);
+
+  // 2. Fetch Categories (Domain Topics under Subjects)
+  const { data: catData } = useQuery({
+    queryKey: ['adminCategories'],
+    queryFn: () => api.get('/categories'),
+    staleTime: 30 * 1000,
+  });
+  const categories = useMemo(() => catData?.categories || [], [catData]);
+
+  // 3. Fetch Subtopics to attach study materials & MCQs
   const { data: topData } = useQuery({
     queryKey: ['allTopicsAdmin'],
     queryFn: () => api.get('/topics?limit=200'),
-    staleTime: 60 * 1000,
+    staleTime: 20 * 1000,
   });
-  const topics = topData?.topics || [
-    { _id: 'less-301', title: 'History of ASD', level: 3 },
-    { _id: 'less-302', title: 'Etiology & Neurobiology', level: 3 },
-    { _id: 'less-303', title: 'Pharmacological Management', level: 3 },
-  ];
+  const topics = useMemo(() => topData?.topics || [], [topData]);
+
+  // Filter topics and subtopics for Material Form
+  const matAvailableTopics = useMemo(() => {
+    if (!selectedMatSubject) return categories;
+    return categories.filter(c => c.subject && (c.subject._id === selectedMatSubject || c.subject === selectedMatSubject));
+  }, [categories, selectedMatSubject]);
+
+  const matAvailableSubtopics = useMemo(() => {
+    if (!selectedMatCategory) return [];
+    return topics.filter(t => t.category && (t.category._id === selectedMatCategory || t.category === selectedMatCategory) && !t.parentTopic);
+  }, [topics, selectedMatCategory]);
+
+  const matAvailableSubSubtopics = useMemo(() => {
+    if (!selectedMatSubtopic) return [];
+    return topics.filter(t => {
+      const pId = t.parentTopic?._id || t.parentTopic;
+      return pId && pId.toString() === selectedMatSubtopic.toString();
+    });
+  }, [topics, selectedMatSubtopic]);
+
+  // Filter topics and subtopics for MCQ Form
+  const mcqAvailableTopics = useMemo(() => {
+    if (!selectedMcqSubject) return categories;
+    return categories.filter(c => c.subject && (c.subject._id === selectedMcqSubject || c.subject === selectedMcqSubject));
+  }, [categories, selectedMcqSubject]);
+
+  const mcqAvailableSubtopics = useMemo(() => {
+    if (!selectedMcqCategory) return [];
+    return topics.filter(t => t.category && (t.category._id === selectedMcqCategory || t.category === selectedMcqCategory) && !t.parentTopic);
+  }, [topics, selectedMcqCategory]);
+
+  const mcqAvailableSubSubtopics = useMemo(() => {
+    if (!selectedMcqSubtopic) return [];
+    return topics.filter(t => {
+      const pId = t.parentTopic?._id || t.parentTopic;
+      return pId && pId.toString() === selectedMcqSubtopic.toString();
+    });
+  }, [topics, selectedMcqSubtopic]);
 
   // Fetch materials from database
   const { data: matData } = useQuery({
@@ -52,11 +104,7 @@ const ManageMaterials = () => {
     queryFn: () => api.get('/materials/admin/all'),
     staleTime: 30 * 1000,
   });
-  const materials = useMemo(() => {
-    const dbMats = matData?.materials || [];
-    if (dbMats.length >= 2) return dbMats;
-    return [...dbMats, ...DEFAULT_MATERIALS.filter(m => !dbMats.some(dm => dm.title === m.title))];
-  }, [matData]);
+  const materials = useMemo(() => matData?.materials || [], [matData]);
 
   // Fetch MCQs from database
   const { data: mcqData } = useQuery({
@@ -64,17 +112,298 @@ const ManageMaterials = () => {
     queryFn: () => api.get('/quiz/admin/all'),
     staleTime: 30 * 1000,
   });
-  const mcqs = useMemo(() => {
-    const dbMcqs = mcqData?.mcqs || [];
-    if (dbMcqs.length >= 2) return dbMcqs;
-    return [...dbMcqs, ...DEFAULT_MCQS.filter(mq => !dbMcqs.some(dmq => dmq.question === mq.question))];
-  }, [mcqData]);
+  const mcqs = useMemo(() => mcqData?.mcqs || [], [mcqData]);
+
+  // Populate form when navigating to edit from the library tables via router state
+  useEffect(() => {
+    if (location.state?.editMatItem && topics.length > 0 && categories.length > 0) {
+      const item = location.state.editMatItem;
+      setEditingMatId(item._id);
+      const subId = item.topic?._id || item.topic || '';
+      setMatForm({
+        topic: subId,
+        title: item.title || '',
+        description: item.description || '',
+        type: item.type || 'VIDEO',
+        videoUrl: item.videoUrl || '',
+        fileUrl: item.fileUrl || '',
+        richTextContent: item.richTextContent || '',
+        duration: item.duration || '24 min',
+      });
+      const matchedSub = topics.find(t => (t._id || t)?.toString() === subId?.toString());
+      if (matchedSub) {
+        if (matchedSub.parentTopic) {
+          const parentId = matchedSub.parentTopic?._id || matchedSub.parentTopic;
+          setSelectedMatSubtopic(parentId?.toString() || '');
+          setSelectedMatSubSubtopic(matchedSub._id);
+        } else {
+          setSelectedMatSubtopic(matchedSub._id);
+          setSelectedMatSubSubtopic('');
+        }
+        const catId = matchedSub.category?._id || matchedSub.category || '';
+        setSelectedMatCategory(catId);
+        const matchedCat = categories.find(c => (c._id || c)?.toString() === catId?.toString());
+        if (matchedCat) {
+          setSelectedMatSubject(matchedCat.subject?._id || matchedCat.subject || '');
+        }
+      }
+      navigate(location.pathname, { replace: true, state: {} });
+    } else if (location.state?.editMcqItem && topics.length > 0 && categories.length > 0) {
+      const item = location.state.editMcqItem;
+      setEditingMcqId(item._id);
+      const subId = item.topic?._id || item.topic || '';
+      setMcqForm({
+        topic: subId,
+        question: item.question || '',
+        optionA: item.optionA || '',
+        optionB: item.optionB || '',
+        optionC: item.optionC || '',
+        optionD: item.optionD || '',
+        correctAnswer: item.correctAnswer || 'C',
+        difficulty: item.difficulty || 'Medium',
+        explanation: item.explanation || '',
+      });
+      const matchedSub = topics.find(t => (t._id || t)?.toString() === subId?.toString());
+      if (matchedSub) {
+        if (matchedSub.parentTopic) {
+          const parentId = matchedSub.parentTopic?._id || matchedSub.parentTopic;
+          setSelectedMcqSubtopic(parentId?.toString() || '');
+          setSelectedMcqSubSubtopic(matchedSub._id);
+        } else {
+          setSelectedMcqSubtopic(matchedSub._id);
+          setSelectedMcqSubSubtopic('');
+        }
+        const catId = matchedSub.category?._id || matchedSub.category || '';
+        setSelectedMcqCategory(catId);
+        const matchedCat = categories.find(c => (c._id || c)?.toString() === catId?.toString());
+        if (matchedCat) {
+          setSelectedMcqSubject(matchedCat.subject?._id || matchedCat.subject || '');
+        }
+      }
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, topics, categories, navigate, location.pathname]);
+
+  // Reset editing state when switching route tabs directly in sidebar
+  useEffect(() => {
+    if (!location.state?.editMatItem && activeTab !== 'UPLOAD_MATERIALS' && editingMatId) {
+      setEditingMatId(null);
+      setMatForm({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '24 min' });
+      setSelectedFile(null);
+    }
+    if (!location.state?.editMcqItem && activeTab !== 'UPLOAD_MCQS' && editingMcqId) {
+      setEditingMcqId(null);
+      setMcqForm({ topic: '', question: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'C', difficulty: 'Medium', explanation: '' });
+    }
+  }, [activeTab, location.state, editingMatId, editingMcqId]);
+
+  // Table Filtering & Search States
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterTopic, setFilterTopic] = useState('');
+  const [filterSubtopic, setFilterSubtopic] = useState('');
+  const [filterSubSubtopic, setFilterSubSubtopic] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter dropdown options for tables
+  const filterAvailableTopics = useMemo(() => {
+    if (!filterSubject) return categories;
+    return categories.filter(c => c.subject && (c.subject._id === filterSubject || c.subject === filterSubject));
+  }, [categories, filterSubject]);
+
+  const filterAvailableSubtopics = useMemo(() => {
+    if (!filterTopic) return topics.filter(t => !t.parentTopic);
+    return topics.filter(t => t.category && (t.category._id === filterTopic || t.category === filterTopic) && !t.parentTopic);
+  }, [topics, filterTopic]);
+
+  const filterAvailableSubSubtopics = useMemo(() => {
+    if (!filterSubtopic) return topics.filter(t => t.parentTopic);
+    return topics.filter(t => {
+      const pId = t.parentTopic?._id || t.parentTopic;
+      return pId && pId.toString() === filterSubtopic.toString();
+    });
+  }, [topics, filterSubtopic]);
+
+  // Helper function to check if an item matches the current filters and search query
+  const checkItemMatch = (itemTopicId, title = '', description = '', extraText = '') => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch = 
+        (title && title.toLowerCase().includes(q)) ||
+        (description && description.toLowerCase().includes(q)) ||
+        (extraText && extraText.toLowerCase().includes(q));
+      if (!matchSearch) return false;
+    }
+
+    if (!filterSubject && !filterTopic && !filterSubtopic && !filterSubSubtopic) {
+      return true;
+    }
+
+    if (!itemTopicId) return false;
+
+    const tId = (itemTopicId._id || itemTopicId)?.toString();
+    const tObj = topics.find(t => (t._id || t)?.toString() === tId);
+    if (!tObj) return false;
+
+    let itemSubSubId = null;
+    let itemSubId = null;
+    if (tObj.parentTopic) {
+      itemSubSubId = tObj._id?.toString();
+      itemSubId = (tObj.parentTopic._id || tObj.parentTopic)?.toString();
+    } else {
+      itemSubId = tObj._id?.toString();
+    }
+    const itemCatId = (tObj.category?._id || tObj.category)?.toString();
+    const catObj = categories.find(c => (c._id || c)?.toString() === itemCatId);
+    const itemSubjId = (catObj?.subject?._id || catObj?.subject)?.toString();
+
+    if (filterSubject && itemSubjId !== filterSubject.toString()) return false;
+    if (filterTopic && itemCatId !== filterTopic.toString()) return false;
+    if (filterSubtopic && itemSubId !== filterSubtopic.toString()) return false;
+    if (filterSubSubtopic && itemSubSubId !== filterSubSubtopic.toString()) return false;
+
+    return true;
+  };
+
+  const filteredMaterials = useMemo(() => {
+    return materials.filter(m => checkItemMatch(m.topic, m.title, m.description, m.type || m.topic?.title));
+  }, [materials, filterSubject, filterTopic, filterSubtopic, filterSubSubtopic, searchQuery, topics, categories]);
+
+  const filteredMCQs = useMemo(() => {
+    return mcqs.filter(q => checkItemMatch(q.topic, q.question, q.explanation, q.topic?.title));
+  }, [mcqs, filterSubject, filterTopic, filterSubtopic, filterSubSubtopic, searchQuery, topics, categories]);
+
+  const renderFilterDashboard = (colorClass = 'text-primaryBlue', borderClass = 'focus:border-primaryBlue', isMcq = false) => (
+    <div className="bg-white border border-borderLine rounded-3xl p-6 lg:p-7 shadow-soft space-y-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-borderLine pb-4">
+        <div className="flex items-center gap-2 font-black text-navy text-base">
+          <Filter className={`w-5 h-5 ${colorClass}`} />
+          <span>Filter {isMcq ? 'Question Bank' : 'Study Materials'} & Advanced Search</span>
+          {(filterSubject || filterTopic || filterSubtopic || filterSubSubtopic || searchQuery) && (
+            <span className={isMcq ? 'bg-[#EAF7ED] text-medicalGreen text-xs font-extrabold px-3 py-0.5 rounded-full' : 'bg-[#E9F2FF] text-primaryBlue text-xs font-extrabold px-3 py-0.5 rounded-full'}>
+              Filters Active
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:w-72">
+            <Search className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder={isMcq ? "Search vignette, rationale, or lesson..." : "Search title, lesson, or keywords..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full pl-10 pr-9 py-2 rounded-xl bg-secondaryBg border border-borderLine text-xs font-bold text-navy outline-none ${borderClass} transition-all`}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-navy"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          {(filterSubject || filterTopic || filterSubtopic || filterSubSubtopic || searchQuery) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterSubject('');
+                setFilterTopic('');
+                setFilterSubtopic('');
+                setFilterSubSubtopic('');
+                setSearchQuery('');
+              }}
+              className="px-3.5 py-2 rounded-xl bg-secondaryBg hover:bg-[#FFF2F2] text-muted hover:text-[#DC2626] border border-borderLine text-xs font-extrabold flex items-center gap-1.5 transition-all whitespace-nowrap"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Filters</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label className="block text-[11px] font-extrabold text-muted uppercase tracking-wider mb-1.5">Filter by Subject</label>
+          <select
+            value={filterSubject}
+            onChange={(e) => {
+              setFilterSubject(e.target.value);
+              setFilterTopic('');
+              setFilterSubtopic('');
+              setFilterSubSubtopic('');
+            }}
+            className={`w-full p-3 rounded-xl bg-white border border-borderLine font-bold text-xs text-navy outline-none ${borderClass} shadow-xs`}
+          >
+            <option value="">All Subjects ({subjects.length})</option>
+            {subjects.map(s => (
+              <option key={s._id} value={s._id}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-extrabold text-muted uppercase tracking-wider mb-1.5">Filter by Topic</label>
+          <select
+            value={filterTopic}
+            onChange={(e) => {
+              setFilterTopic(e.target.value);
+              setFilterSubtopic('');
+              setFilterSubSubtopic('');
+            }}
+            disabled={!filterSubject && filterAvailableTopics.length === 0}
+            className={`w-full p-3 rounded-xl bg-white border border-borderLine font-bold text-xs text-navy outline-none ${borderClass} shadow-xs disabled:opacity-50`}
+          >
+            <option value="">All Topics ({filterAvailableTopics.length})</option>
+            {filterAvailableTopics.map(t => (
+              <option key={t._id} value={t._id}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-extrabold text-muted uppercase tracking-wider mb-1.5">Filter by Subtopic</label>
+          <select
+            value={filterSubtopic}
+            onChange={(e) => {
+              setFilterSubtopic(e.target.value);
+              setFilterSubSubtopic('');
+            }}
+            disabled={!filterTopic && filterAvailableSubtopics.length === 0}
+            className={`w-full p-3 rounded-xl bg-white border border-borderLine font-bold text-xs text-navy outline-none ${borderClass} shadow-xs disabled:opacity-50`}
+          >
+            <option value="">All Subtopics ({filterAvailableSubtopics.length})</option>
+            {filterAvailableSubtopics.map(st => (
+              <option key={st._id} value={st._id}>{st.title}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-extrabold text-muted uppercase tracking-wider mb-1.5">Filter by Subtopic's Subtopic</label>
+          <select
+            value={filterSubSubtopic}
+            onChange={(e) => setFilterSubSubtopic(e.target.value)}
+            disabled={!filterSubtopic || filterAvailableSubSubtopics.length === 0}
+            className={`w-full p-3 rounded-xl bg-white border border-borderLine font-bold text-xs text-navy outline-none ${borderClass} shadow-xs disabled:opacity-50`}
+          >
+            <option value="">
+              {!filterSubtopic ? 'Select Subtopic first...' : filterAvailableSubSubtopics.length === 0 ? 'No Sub-Subtopics Available' : `All Sub-Subtopics (${filterAvailableSubSubtopics.length})`}
+            </option>
+            {filterAvailableSubSubtopics.map(sst => (
+              <option key={sst._id} value={sst._id}>{sst.title}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
 
   // --- MATERIAL MUTATIONS ---
   const saveMaterial = async (e) => {
     e.preventDefault();
-    if (!matForm.topic && topics.length > 0) matForm.topic = topics[0]._id;
-    if (!matForm.topic) return toast.error('Please select an associated topic lesson.');
+    if (!matForm.topic) return toast.error('Please select an associated Subtopic for this study material.');
 
     setIsUploading(true);
     try {
@@ -89,20 +418,25 @@ const ManageMaterials = () => {
       if (matForm.richTextContent) formData.append('richTextContent', matForm.richTextContent);
       if (selectedFile) formData.append('file', selectedFile);
 
-      if (editingMatId && !editingMatId.startsWith('mat-')) {
-        await api.put(`/materials/${editingMatId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const wasEditing = editingMatId;
+      if (wasEditing) {
+        await api.put(`/materials/${wasEditing}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         toast.success('🎉 Study Material updated successfully!');
       } else {
         await api.post('/materials/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-        toast.success('🎉 Study Material uploaded and published into MongoDB!');
+        toast.success('🎉 Study Material uploaded and published!');
       }
       queryClient.invalidateQueries(['adminMaterials']);
       setEditingMatId(null);
       setMatForm({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '24 min' });
+      setSelectedMatSubject('');
+      setSelectedMatCategory('');
+      setSelectedMatSubtopic('');
+      setSelectedMatSubSubtopic('');
       setSelectedFile(null);
+      if (wasEditing) navigate('/admin/materials/table');
     } catch (err) {
-      toast.success(editingMatId ? '✅ Study Material updated in current view!' : '🎉 Study Material indexed into active curriculum!');
-      setEditingMatId(null);
+      toast.error(err?.response?.data?.message || 'Failed to save study material.');
     } finally {
       setIsUploading(false);
     }
@@ -110,18 +444,20 @@ const ManageMaterials = () => {
 
   const deleteMatMutation = useMutation({
     mutationFn: async (id) => {
-      if (!id.startsWith('mat-')) await api.delete(`/materials/${id}`);
+      await api.delete(`/materials/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminMaterials']);
-      toast.success('🗑️ Study material removed from server storage.');
+      toast.success('🗑️ Study material removed from database.');
     },
   });
 
   const handleEditMat = (item) => {
+    navigate('/admin/materials/upload', { state: { editMatItem: item } });
     setEditingMatId(item._id);
+    const subId = item.topic?._id || item.topic || '';
     setMatForm({
-      topic: item.topic?._id || '',
+      topic: subId,
       title: item.title || '',
       description: item.description || '',
       type: item.type || 'VIDEO',
@@ -130,19 +466,39 @@ const ManageMaterials = () => {
       richTextContent: item.richTextContent || '',
       duration: item.duration || '24 min',
     });
+
+    const matchedSub = topics.find(t => t._id === subId || t._id?.toString() === subId?.toString());
+    if (matchedSub) {
+      if (matchedSub.parentTopic) {
+        const parentId = matchedSub.parentTopic?._id || matchedSub.parentTopic;
+        setSelectedMatSubtopic(parentId?.toString() || '');
+        setSelectedMatSubSubtopic(matchedSub._id);
+      } else {
+        setSelectedMatSubtopic(matchedSub._id);
+        setSelectedMatSubSubtopic('');
+      }
+
+      const catId = matchedSub.category?._id || matchedSub.category || '';
+      setSelectedMatCategory(catId);
+      const matchedCat = categories.find(c => c._id === catId || c._id?.toString() === catId?.toString());
+      if (matchedCat) {
+        setSelectedMatSubject(matchedCat.subject?._id || matchedCat.subject || '');
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // --- MCQ MUTATIONS ---
   const saveMCQ = async (e) => {
     e.preventDefault();
-    if (!mcqForm.topic && topics.length > 0) mcqForm.topic = topics[0]._id;
-    if (!mcqForm.topic) return toast.error('Please select an associated topic lesson for this question.');
+    if (!mcqForm.topic) return toast.error('Please select an associated Subtopic for this question.');
 
     try {
-      if (editingMcqId && !editingMcqId.startsWith('mcq-')) {
-        await api.put(`/quiz/${editingMcqId}`, mcqForm);
-        toast.success('🎉 Practice MCQ updated successfully in assessment database!');
+      const wasEditingMcq = editingMcqId;
+      if (wasEditingMcq) {
+        await api.put(`/quiz/${wasEditingMcq}`, mcqForm);
+        toast.success('🎉 Practice MCQ updated successfully in database!');
       } else {
         await api.post('/quiz', mcqForm);
         toast.success('🎉 Practice MCQ added to topic question bank!');
@@ -150,26 +506,32 @@ const ManageMaterials = () => {
       queryClient.invalidateQueries(['adminMCQs']);
       setEditingMcqId(null);
       setMcqForm({ topic: '', question: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'C', difficulty: 'Medium', explanation: '' });
+      setSelectedMcqSubject('');
+      setSelectedMcqCategory('');
+      setSelectedMcqSubtopic('');
+      setSelectedMcqSubSubtopic('');
+      if (wasEditingMcq) navigate('/admin/mcqs/table');
     } catch (err) {
-      toast.success(editingMcqId ? '✅ Practice MCQ updated in active question bank!' : '🎉 Practice MCQ added to active assessment engine!');
-      setEditingMcqId(null);
+      toast.error(err?.response?.data?.message || 'Failed to save MCQ.');
     }
   };
 
   const deleteMcqMutation = useMutation({
     mutationFn: async (id) => {
-      if (!id.startsWith('mcq-')) await api.delete(`/quiz/${id}`);
+      await api.delete(`/quiz/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminMCQs']);
-      toast.success('🗑️ MCQ removed from question bank.');
+      toast.success('🗑️ MCQ removed from database.');
     },
   });
 
   const handleEditMcq = (item) => {
+    navigate('/admin/mcqs/create', { state: { editMcqItem: item } });
     setEditingMcqId(item._id);
+    const subId = item.topic?._id || item.topic || '';
     setMcqForm({
-      topic: item.topic?._id || '',
+      topic: subId,
       question: item.question || '',
       optionA: item.optionA || '',
       optionB: item.optionB || '',
@@ -179,6 +541,26 @@ const ManageMaterials = () => {
       difficulty: item.difficulty || 'Medium',
       explanation: item.explanation || '',
     });
+
+    const matchedSub = topics.find(t => t._id === subId || t._id?.toString() === subId?.toString());
+    if (matchedSub) {
+      if (matchedSub.parentTopic) {
+        const parentId = matchedSub.parentTopic?._id || matchedSub.parentTopic;
+        setSelectedMcqSubtopic(parentId?.toString() || '');
+        setSelectedMcqSubSubtopic(matchedSub._id);
+      } else {
+        setSelectedMcqSubtopic(matchedSub._id);
+        setSelectedMcqSubSubtopic('');
+      }
+
+      const catId = matchedSub.category?._id || matchedSub.category || '';
+      setSelectedMcqCategory(catId);
+      const matchedCat = categories.find(c => c._id === catId || c._id?.toString() === catId?.toString());
+      if (matchedCat) {
+        setSelectedMcqSubject(matchedCat.subject?._id || matchedCat.subject || '');
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -194,45 +576,21 @@ const ManageMaterials = () => {
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-black text-navy tracking-tight">
-            {activeTab === 'MATERIALS' ? 'Manage Videos & Study Materials' : 'Manage Practice MCQs & Board Quizzes'}
+            {(activeTab === 'UPLOAD_MATERIALS' || activeTab === 'TABLE_MATERIALS' || activeTab === 'MATERIALS') 
+              ? 'Manage Videos & Study Materials' 
+              : 'Manage Practice MCQs & Board Quizzes'}
           </h1>
           <p className="text-sm font-medium text-muted mt-2 leading-relaxed">
-            {activeTab === 'MATERIALS'
-              ? 'Attach MP4 video lectures, PDF clinical guidelines, or structured reading notes to specific lesson orbits (Screen 4).'
+            {(activeTab === 'UPLOAD_MATERIALS' || activeTab === 'TABLE_MATERIALS' || activeTab === 'MATERIALS')
+              ? 'Attach MP4 video lectures, PDF clinical guidelines, or structured reading notes to specific lesson orbits.'
               : 'Construct board-format multiple choice practice questions, clinical vignettes, answer options, and study rationales.'}
           </p>
         </div>
-
-        {/* Tab Selection Bar */}
-        <div className="flex items-center gap-2 bg-secondaryBg p-1.5 rounded-2xl border border-borderLine relative z-10 self-stretch lg:self-auto justify-center">
-          <button
-            onClick={() => { setActiveTab('MATERIALS'); setEditingMatId(null); setEditingMcqId(null); }}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-extrabold transition-all ${
-              activeTab === 'MATERIALS'
-                ? 'bg-primaryBlue text-white shadow-md'
-                : 'text-muted hover:text-navy'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span>Study Materials & Videos ({materials.length})</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab('MCQS'); setEditingMatId(null); setEditingMcqId(null); }}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-extrabold transition-all ${
-              activeTab === 'MCQS'
-                ? 'bg-medicalGreen text-white shadow-md'
-                : 'text-muted hover:text-navy'
-            }`}
-          >
-            <HelpCircle className="w-4 h-4" />
-            <span>Practice MCQs ({mcqs.length})</span>
-          </button>
-        </div>
       </div>
 
-      {/* ======================= TAB 1: STUDY MATERIALS & VIDEOS ======================= */}
-      {activeTab === 'MATERIALS' ? (
-        <>
+      {/* ======================= TAB 1: UPLOAD STUDY MATERIALS FORM ======================= */}
+      {(activeTab === 'UPLOAD_MATERIALS' || activeTab === 'MATERIALS') && (
+        <div className="space-y-6">
           {/* Material Editor Form */}
           <form onSubmit={saveMaterial} className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft space-y-5 relative">
             <div className="flex items-center justify-between mb-4 border-b border-borderLine pb-4">
@@ -247,22 +605,107 @@ const ManageMaterials = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-navy mb-1.5">Associated Lesson Orbit *</label>
-                <select
-                  value={matForm.topic || (topics[0]?._id || '')}
-                  onChange={(e) => setMatForm({ ...matForm, topic: e.target.value })}
-                  required
-                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
-                >
-                  <option value="">-- Select Target Lesson --</option>
-                  {topics.map((t) => (
-                    <option key={t._id} value={t._id}>[{t.level === 3 ? 'Lesson' : `Tier ${t.level}`}] {t.title}</option>
-                  ))}
-                </select>
+            {/* 4-Tier Cascading Curriculum Selection */}
+            <div className="bg-[#EAF2FC]/60 p-5 rounded-2xl border border-primaryBlue/20 space-y-4 mb-3">
+              <div className="text-xs font-black text-primaryBlue uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-4 h-4" />
+                <span>Step 1: Select Target Subject, Topic, Subtopic & Sub-Subtopic</span>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-navy mb-1.5">1. Select Subject *</label>
+                  <select
+                    value={selectedMatSubject}
+                    onChange={(e) => {
+                      setSelectedMatSubject(e.target.value);
+                      setSelectedMatCategory('');
+                      setSelectedMatSubtopic('');
+                      setSelectedMatSubSubtopic('');
+                      setMatForm({ ...matForm, topic: '' });
+                    }}
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue shadow-xs"
+                  >
+                    <option value="">-- 1. Select Subject --</option>
+                    {subjects.map((sub) => (
+                      <option key={sub._id} value={sub._id}>{sub.name}</option>
+                    ))}
+                  </select>
+                </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-navy mb-1.5">2. Select Topic *</label>
+                  <select
+                    value={selectedMatCategory}
+                    onChange={(e) => {
+                      setSelectedMatCategory(e.target.value);
+                      setSelectedMatSubtopic('');
+                      setSelectedMatSubSubtopic('');
+                      setMatForm({ ...matForm, topic: '' });
+                    }}
+                    disabled={!selectedMatSubject && categories.length > 0}
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">-- 2. Select Topic --</option>
+                    {matAvailableTopics.map((cat) => (
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-navy mb-1.5">3. Select Subtopic *</label>
+                  <select
+                    value={selectedMatSubtopic}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedMatSubtopic(val);
+                      setSelectedMatSubSubtopic('');
+                      setMatForm({ ...matForm, topic: val });
+                    }}
+                    required
+                    disabled={!selectedMatCategory && topics.length > 0}
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-black text-sm text-primaryBlue outline-none focus:border-primaryBlue shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">-- 3. Select Subtopic --</option>
+                    {matAvailableSubtopics.map((t) => (
+                      <option key={t._id} value={t._id}>{t.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-navy mb-1.5 flex items-center justify-between">
+                    <span>4. Subtopic's Subtopic</span>
+                    {matAvailableSubSubtopics.length > 0 && (
+                      <span className="text-[10px] text-primaryBlue font-extrabold bg-blue-100 px-1.5 py-0.5 rounded">Optional</span>
+                    )}
+                  </label>
+                  <select
+                    value={selectedMatSubSubtopic}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedMatSubSubtopic(val);
+                      setMatForm({ ...matForm, topic: val || selectedMatSubtopic });
+                    }}
+                    disabled={!selectedMatSubtopic || matAvailableSubSubtopics.length === 0}
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-black text-sm text-purple-700 outline-none focus:border-purple-600 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!selectedMatSubtopic 
+                        ? '-- 4. Select Sub-subtopic --' 
+                        : matAvailableSubSubtopics.length === 0 
+                          ? '-- No Sub-subtopics present --' 
+                          : '-- Attach to parent or select --'}
+                    </option>
+                    {matAvailableSubSubtopics.map((t) => (
+                      <option key={t._id} value={t._id}>└─ {t.title}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-navy mb-1.5">Material Format Type *</label>
                 <select
@@ -270,7 +713,7 @@ const ManageMaterials = () => {
                   onChange={(e) => setMatForm({ ...matForm, type: e.target.value })}
                   className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
                 >
-                  <option value="VIDEO">📹 Video Lecture Module (MP4 / Link)</option>
+                  <option value="VIDEO">📹 YouTube Video Lecture Module (In-App Player)</option>
                   <option value="NOTES">📝 Structured Lecture Notes (HTML / Markdown)</option>
                   <option value="PDF">📑 Downloadable Clinical PDF Document</option>
                 </select>
@@ -312,25 +755,24 @@ const ManageMaterials = () => {
             </div>
 
             {matForm.type === 'VIDEO' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-secondaryBg/60 p-5 rounded-2xl border border-borderLine">
-                <div>
-                  <label className="block text-xs font-bold text-navy mb-1">Video Streaming URL (MP4 / YouTube)</label>
-                  <input
-                    type="text"
-                    placeholder="https://commondatastorage.googleapis.com/.../video.mp4"
-                    value={matForm.videoUrl}
-                    onChange={(e) => setMatForm({ ...matForm, videoUrl: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-semibold text-sm text-navy outline-none"
-                  />
+              <div className="bg-[#FFF5F5] p-5 rounded-2xl border border-red-200/60 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-extrabold text-red-600 uppercase tracking-wider">
+                  <Video className="w-4 h-4" />
+                  <span>YouTube Video Link (In-App Native Playback)</span>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-navy mb-1">Or Attach Local MP4 Video File (Max 100MB)</label>
+                  <label className="block text-xs font-bold text-navy mb-1">YouTube Video Link or Embed URL *</label>
                   <input
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => setSelectedFile(e.target.files[0])}
-                    className="w-full p-3 rounded-xl bg-white border border-borderLine text-xs font-bold text-navy file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#E9F2FF] file:text-primaryBlue cursor-pointer"
+                    type="text"
+                    required={matForm.type === 'VIDEO'}
+                    placeholder="e.g., https://www.youtube.com/watch?v=XXXXX or https://youtu.be/XXXXX"
+                    value={matForm.videoUrl}
+                    onChange={(e) => setMatForm({ ...matForm, videoUrl: e.target.value })}
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-semibold text-sm text-navy outline-none focus:border-red-500 shadow-xs"
                   />
+                  <p className="text-[11px] text-muted font-medium mt-1.5 flex items-center gap-1">
+                    🔒 Students will watch this video exclusively inside the app. Their timestamp will be saved automatically so they can resume right where they left off!
+                  </p>
                 </div>
               </div>
             ) : (
@@ -361,7 +803,7 @@ const ManageMaterials = () => {
               {editingMatId && (
                 <button
                   type="button"
-                  onClick={() => { setEditingMatId(null); setMatForm({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '24 min' }); setSelectedFile(null); }}
+                  onClick={() => { setEditingMatId(null); setMatForm({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '24 min' }); setSelectedFile(null); setSelectedMatSubtopic(''); setSelectedMatSubSubtopic(''); navigate('/admin/materials/table'); }}
                   className="btn-secondary text-xs px-6 py-3.5"
                 >
                   Cancel Edit
@@ -373,12 +815,19 @@ const ManageMaterials = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ======================= TAB 2: PUBLISHED STUDY MATERIALS TABLE & FILTERS ======================= */}
+      {activeTab === 'TABLE_MATERIALS' && (
+        <div className="space-y-6">
+          {renderFilterDashboard('text-primaryBlue', 'focus:border-primaryBlue', false)}
 
           {/* Materials List Table */}
           <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft overflow-x-auto">
             <h3 className="text-lg font-black text-navy mb-5 flex items-center gap-2">
               <FileText className="w-5 h-5 text-[#7435D5]" />
-              <span>Published Study Materials & Lectures ({materials.length})</span>
+              <span>Published Study Materials & Lectures ({filteredMaterials.length}{filteredMaterials.length !== materials.length ? ` of ${materials.length}` : ''})</span>
             </h3>
             <table className="w-full text-left border-collapse">
               <thead>
@@ -391,7 +840,7 @@ const ManageMaterials = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-borderLine/50 text-sm font-semibold text-navy">
-                {materials.map((m) => (
+                {filteredMaterials.map((m) => (
                   <tr key={m._id} className="hover:bg-secondaryBg/80 transition-colors group">
                     <td className="py-4 px-4 font-black flex items-center gap-3">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
@@ -441,18 +890,22 @@ const ManageMaterials = () => {
                     </td>
                   </tr>
                 ))}
-                {materials.length === 0 && (
+                {filteredMaterials.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="text-center py-12 text-muted font-bold">No study materials published yet. Use the upload form above!</td>
+                    <td colSpan={5} className="text-center py-12 text-muted font-bold">
+                      {materials.length === 0 ? 'No study materials published yet. Switch to Upload Material tab above!' : 'No study materials found matching your selected filters and search query.'}
+                    </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </>
-      ) : (
-        /* ======================= TAB 2: PRACTICE MCQS & BOARD QUIZZES ======================= */
-        <>
+        </div>
+      )}
+
+      {/* ======================= TAB 3: CREATE PRACTICE MCQS FORM ======================= */}
+      {(activeTab === 'UPLOAD_MCQS' || activeTab === 'MCQS') && (
+        <div className="space-y-6">
           <form onSubmit={saveMCQ} className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft space-y-5 relative">
             <div className="flex items-center justify-between mb-4 border-b border-borderLine pb-4">
               <h2 className="text-lg md:text-xl font-black text-navy flex items-center gap-2.5">
@@ -466,22 +919,107 @@ const ManageMaterials = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-navy mb-1.5">Target Lesson Orbit *</label>
-                <select
-                  value={mcqForm.topic || (topics[0]?._id || '')}
-                  onChange={(e) => setMcqForm({ ...mcqForm, topic: e.target.value })}
-                  required
-                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-medicalGreen"
-                >
-                  <option value="">-- Select Target Lesson --</option>
-                  {topics.map((t) => (
-                    <option key={t._id} value={t._id}>[{t.level === 3 ? 'Lesson' : `Tier ${t.level}`}] {t.title}</option>
-                  ))}
-                </select>
+            {/* 4-Tier Cascading Assessment Selection */}
+            <div className="bg-[#EDFAF3]/60 p-5 rounded-2xl border border-medicalGreen/20 space-y-4 mb-3">
+              <div className="text-xs font-black text-medicalGreen uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-4 h-4" />
+                <span>Step 1: Select Target Subject, Topic, Subtopic & Sub-Subtopic</span>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-navy mb-1.5">1. Select Subject *</label>
+                  <select
+                    value={selectedMcqSubject}
+                    onChange={(e) => {
+                      setSelectedMcqSubject(e.target.value);
+                      setSelectedMcqCategory('');
+                      setSelectedMcqSubtopic('');
+                      setSelectedMcqSubSubtopic('');
+                      setMcqForm({ ...mcqForm, topic: '' });
+                    }}
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-medicalGreen shadow-xs"
+                  >
+                    <option value="">-- 1. Select Subject --</option>
+                    {subjects.map((sub) => (
+                      <option key={sub._id} value={sub._id}>{sub.name}</option>
+                    ))}
+                  </select>
+                </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-navy mb-1.5">2. Select Topic *</label>
+                  <select
+                    value={selectedMcqCategory}
+                    onChange={(e) => {
+                      setSelectedMcqCategory(e.target.value);
+                      setSelectedMcqSubtopic('');
+                      setSelectedMcqSubSubtopic('');
+                      setMcqForm({ ...mcqForm, topic: '' });
+                    }}
+                    disabled={!selectedMcqSubject && categories.length > 0}
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-medicalGreen shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">-- 2. Select Topic --</option>
+                    {mcqAvailableTopics.map((cat) => (
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-navy mb-1.5">3. Select Subtopic *</label>
+                  <select
+                    value={selectedMcqSubtopic}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedMcqSubtopic(val);
+                      setSelectedMcqSubSubtopic('');
+                      setMcqForm({ ...mcqForm, topic: val });
+                    }}
+                    required
+                    disabled={!selectedMcqCategory && topics.length > 0}
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-black text-sm text-medicalGreen outline-none focus:border-medicalGreen shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">-- 3. Select Subtopic --</option>
+                    {mcqAvailableSubtopics.map((t) => (
+                      <option key={t._id} value={t._id}>{t.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-navy mb-1.5 flex items-center justify-between">
+                    <span>4. Subtopic's Subtopic</span>
+                    {mcqAvailableSubSubtopics.length > 0 && (
+                      <span className="text-[10px] text-medicalGreen font-extrabold bg-green-100 px-1.5 py-0.5 rounded">Optional</span>
+                    )}
+                  </label>
+                  <select
+                    value={selectedMcqSubSubtopic}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedMcqSubSubtopic(val);
+                      setMcqForm({ ...mcqForm, topic: val || selectedMcqSubtopic });
+                    }}
+                    disabled={!selectedMcqSubtopic || mcqAvailableSubSubtopics.length === 0}
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-black text-sm text-purple-700 outline-none focus:border-purple-600 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!selectedMcqSubtopic 
+                        ? '-- 4. Select Sub-subtopic --' 
+                        : mcqAvailableSubSubtopics.length === 0 
+                          ? '-- No Sub-subtopics present --' 
+                          : '-- Attach to parent or select --'}
+                    </option>
+                    {mcqAvailableSubSubtopics.map((t) => (
+                      <option key={t._id} value={t._id}>└─ {t.title}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-navy mb-1.5">Correct Answer Key *</label>
                 <select
@@ -585,7 +1123,7 @@ const ManageMaterials = () => {
               {editingMcqId && (
                 <button
                   type="button"
-                  onClick={() => { setEditingMcqId(null); setMcqForm({ topic: '', question: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'C', difficulty: 'Medium', explanation: '' }); }}
+                  onClick={() => { setEditingMcqId(null); setMcqForm({ topic: '', question: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'C', difficulty: 'Medium', explanation: '' }); setSelectedMcqSubtopic(''); setSelectedMcqSubSubtopic(''); navigate('/admin/mcqs/table'); }}
                   className="btn-secondary text-xs px-6 py-3.5"
                 >
                   Cancel Edit
@@ -597,12 +1135,19 @@ const ManageMaterials = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ======================= TAB 4: MCQS QUESTION BANK TABLE & FILTERS ======================= */}
+      {activeTab === 'TABLE_MCQS' && (
+        <div className="space-y-6">
+          {renderFilterDashboard('text-medicalGreen', 'focus:border-medicalGreen', true)}
 
           {/* MCQs List Table */}
           <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft overflow-x-auto">
             <h3 className="text-lg font-black text-navy mb-5 flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-medicalGreen" />
-              <span>Question Bank ({mcqs.length} Practice MCQs)</span>
+              <span>Question Bank ({filteredMCQs.length}{filteredMCQs.length !== mcqs.length ? ` of ${mcqs.length}` : ''} Practice MCQs)</span>
             </h3>
             <table className="w-full text-left border-collapse">
               <thead>
@@ -615,7 +1160,7 @@ const ManageMaterials = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-borderLine/50 text-sm font-semibold text-navy">
-                {mcqs.map((q) => (
+                {filteredMCQs.map((q) => (
                   <tr key={q._id} className="hover:bg-secondaryBg/80 transition-colors group">
                     <td className="py-4 px-4 font-bold">
                       <div className="text-navy group-hover:text-medicalGreen transition-colors">{q.question}</div>
@@ -661,15 +1206,17 @@ const ManageMaterials = () => {
                     </td>
                   </tr>
                 ))}
-                {mcqs.length === 0 && (
+                {filteredMCQs.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="text-center py-12 text-muted font-bold">No practice questions created yet. Construct your first question above!</td>
+                    <td colSpan={5} className="text-center py-12 text-muted font-bold">
+                      {mcqs.length === 0 ? 'No practice questions created yet. Switch to Create MCQ tab above!' : 'No practice MCQs found matching your selected filters and search query.'}
+                    </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

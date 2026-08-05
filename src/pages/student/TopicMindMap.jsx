@@ -7,95 +7,98 @@ import api from '../../api/axiosInstance.js';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
 import MindMapContainer from '../../components/mindmap/MindMapContainer.jsx';
 
-// Default 16 comprehensive clinical lesson orbits for Autism Spectrum Disorder (ASD) matching Reference Image 3 exactly
-const DEFAULT_ASD_LESSONS = [
-  { _id: 'less-1', title: 'History of ASD', slug: 'history-of-asd', badge: 1, icon: 'Clock', color: '#8B5CF6' },
-  { _id: 'less-5', title: 'Etiology', slug: 'etiology-of-asd', badge: 5, icon: 'Dna', color: '#10B981' },
-  { _id: 'less-6', title: 'Assessment & Diagnosis', slug: 'assessment-diagnosis-asd', badge: 6, icon: 'ClipboardCheck', color: '#06B6D4' },
-  { _id: 'less-7', title: 'Differential Diagnosis', slug: 'differential-diagnosis-asd', badge: 7, icon: 'Users', color: '#F97316' },
-  { _id: 'less-8', title: 'Investigations', slug: 'investigations-asd', badge: 8, icon: 'Microscope', color: '#22C55E' },
-  { _id: 'less-9', title: 'Management Protocols', slug: 'management-asd', badge: 9, icon: 'FileText', color: '#3B82F6' },
-  { _id: 'less-10', title: 'Pharmacological Management', slug: 'pharmacological-management-asd', badge: 10, icon: 'Pill', color: '#EA580C' },
-  { _id: 'less-11', title: 'Therapeutic Interventions', slug: 'therapeutic-interventions-asd', badge: 11, icon: 'HeartHandshake', color: '#16A34A' },
-  { _id: 'less-12', title: 'Prognosis & Outcome', slug: 'prognosis-outcome-asd', badge: 12, icon: 'TrendingUp', color: '#F43F5E' },
-  { _id: 'less-13', title: 'Family Support & Counseling', slug: 'family-support-counseling-asd', badge: 13, icon: 'Users', color: '#8B5CF6' },
-  { _id: 'less-14', title: 'Comorbidity & Epilepsy', slug: 'comorbidity-epilepsy-asd', badge: 14, icon: 'Activity', color: '#E11D48' },
-  { _id: 'less-15', title: 'Educational Rehabilitation', slug: 'educational-rehabilitation-asd', badge: 15, icon: 'BookOpen', color: '#2563EB' },
-  { _id: 'less-16', title: 'Recent Advances & Future', slug: 'recent-advances-asd', badge: 16, icon: 'Rocket', color: '#0D9488' },
-  { _id: 'less-2', title: 'Nosology & Classification', slug: 'nosology-classification-asd', badge: 2, icon: 'BookOpen', color: '#22C55E' },
-  { _id: 'less-3', title: 'Clinical Features', slug: 'clinical-features-asd', badge: 3, icon: 'UserCheck', color: '#F59E0B' },
-  { _id: 'less-4', title: 'Epidemiology', slug: 'epidemiology-asd', badge: 4, icon: 'Globe', color: '#EC4899' },
-];
+// Lesson modules and clinical study orbits are loaded dynamically from the database
 
 const TopicMindMap = () => {
-  const { slug = 'autism-spectrum-disorder' } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState('RADIAL'); // Match Screen 3 starburst layout by default
+  const [viewMode, setViewMode] = useState('RADIAL');
 
   // Attempt fetching from API
   const { data: topicData, isLoading } = useQuery({
     queryKey: ['topicMindMap', slug],
     queryFn: () => api.get(`/topics/slug/${slug}/map`),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 1000,
+    enabled: !!slug,
   });
 
-  // Determine root topic titles and formatting
+  // Determine root topic titles and formatting dynamically from backend database
   const topic = useMemo(() => {
-    if (topicData?.rootTopic) return topicData.rootTopic;
-    const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    if (topicData?.rootTopic) {
+      const rt = topicData.rootTopic;
+      return {
+        _id: rt._id || rt.id,
+        title: rt.title || 'Topic Module',
+        shortCode: rt.title ? rt.title.split(' ')[0] : 'TOPIC',
+        color: rt.color || '#126BEE',
+        description: rt.description || 'Comprehensive Level 3 Clinical Lesson Modules and Diagnostic Protocols.',
+        categoryName: rt.category?.name || rt.category?.title || 'Related Category',
+        categorySlug: rt.category?.slug || '',
+      };
+    }
+    const fallbackTitle = (slug || 'Topic').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     return {
-      title: slug === 'autism-spectrum-disorder' ? 'Autism Spectrum Disorder (ASD)' : title,
-      shortCode: slug === 'autism-spectrum-disorder' ? 'ASD' : title.split(' ')[0],
+      _id: 'loading-topic',
+      title: fallbackTitle,
+      shortCode: fallbackTitle.split(' ')[0],
       color: '#126BEE',
-      description: 'Comprehensive Level 3 Clinical Lesson Modules and Diagnostic Protocols.'
+      description: 'Comprehensive Clinical Lesson Modules and Diagnostic Protocols.',
+      categoryName: 'Related Category',
+      categorySlug: '',
     };
   }, [topicData, slug]);
 
-  // Use backend lessons if available and plentiful, otherwise use complete 16-lesson starburst from Image 3
+  // Derive lesson study modules directly from live database child records or provide an interactive access module for leaf subtopics
   const lessons = useMemo(() => {
-    const apiChildren = topicData?.mapData ? topicData.mapData.filter(i => i._id !== topic._id) : [];
-    if (apiChildren.length > 8) {
-      return apiChildren.map((c, idx) => {
-        const fallback = DEFAULT_ASD_LESSONS[idx % DEFAULT_ASD_LESSONS.length];
-        return {
-          _id: c._id || c.id || fallback._id,
-          title: c.title || fallback.title,
-          slug: c.slug || fallback.slug,
-          badge: idx + 1,
-          icon: c.icon || fallback.icon,
-          color: c.color || fallback.color,
-        };
-      });
+    const apiChildren = topicData?.mapData ? topicData.mapData.filter(i => (i._id !== topic._id && i.id !== topic._id)) : [];
+    const palette = ['#8B5CF6', '#10B981', '#06B6D4', '#F97316', '#22C55E', '#3B82F6', '#EA580C', '#E11D48', '#0D9488'];
+
+    if (apiChildren.length === 0) {
+      return [{
+        _id: `module-${slug || topic._id}`,
+        title: `${topic.title || 'Lesson'} - Videos, Study Materials & MCQs`,
+        slug: slug,
+        badge: 1,
+        icon: 'BookOpen',
+        color: '#8B5CF6',
+        description: 'Click to enter and access all video lectures, reading materials, and practice MCQs for this module.',
+      }];
     }
-    return DEFAULT_ASD_LESSONS;
-  }, [topicData, topic._id]);
+
+    return apiChildren.map((c, idx) => ({
+      _id: c._id || c.id || `lesson-${idx}`,
+      title: c.title || `Module ${idx + 1}`,
+      slug: c.slug || `module-${idx + 1}`,
+      badge: c.displayOrder || idx + 1,
+      icon: c.icon || 'BookOpen',
+      color: c.color || palette[idx % palette.length],
+    }));
+  }, [topicData, topic._id, topic.title, slug]);
 
   // Construct 360-degree starburst React Flow nodes around central Topic hub (Image 3)
   const { nodes, edges } = useMemo(() => {
     const centerNode = {
       id: `center-${slug}`,
       type: 'center',
-      position: { x: 800 - 128, y: 800 - 128 }, // Center of canvas at (800, 800)
+      position: { x: 800 - 128, y: 800 - 128 },
       data: {
-        label: slug === 'autism-spectrum-disorder' ? 'ASD' : (topic.shortCode || topic.title || 'Topic').toUpperCase(),
-        subLabel: topic.title.toUpperCase(),
+        label: (topic.shortCode || topic.title || 'Topic').slice(0, 6).toUpperCase(),
+        subLabel: (topic.title || 'Topic').toUpperCase(),
         slogan: 'Select any lesson module below.',
         icon: 'Puzzle',
-        color: '#126BEE',
+        color: topic.color || '#126BEE',
       },
     };
 
     const count = lessons.length;
-    const radius = 380; // Radial separation for 16 nodes
+    const radius = 350;
     const orbitNodes = [];
     const orbitEdges = [];
 
-    // Sort lessons by badge number for sequential display around the circle
     const sortedLessons = [...lessons].sort((a, b) => (a.badge || 0) - (b.badge || 0));
 
     sortedLessons.forEach((item, idx) => {
-      // Start at top (-PI/2) and circle clockwise
-      const angle = (idx / count) * 2 * Math.PI - Math.PI / 2;
+      const angle = count > 0 ? (idx / count) * 2 * Math.PI - Math.PI / 2 : 0;
       const x = 800 + radius * Math.cos(angle) - 80;
       const y = 800 + radius * Math.sin(angle) - 80;
 
@@ -109,13 +112,13 @@ const TopicMindMap = () => {
           id: item._id,
           label: item.title,
           slug: item.slug,
-          badgeNumber: item.badge || (idx + 1), // Renders the top colored numbered circular badge!
+          badgeNumber: item.badge || (idx + 1),
           icon: item.icon,
           color: item.color,
           onNodeClick: (nodeData) => {
-            // CLICKING ANY OF THE 16 LESSON CIRCLES IMMEDIATELY OPEN SCREEN 4 (Video + Notes + MCQs)
-            const targetLessonSlug = nodeData.slug || 'history-of-asd';
-            navigate(`/lesson/${targetLessonSlug}`);
+            if (nodeData.slug) {
+              navigate(`/lesson/${nodeData.slug}`);
+            }
           },
         },
       });
@@ -137,7 +140,7 @@ const TopicMindMap = () => {
     return (
       <div className="p-16 text-center font-extrabold text-navy flex flex-col items-center gap-4">
         <Puzzle className="w-12 h-12 text-primaryBlue animate-bounce" />
-        <span className="text-lg">Generating 16-Node Topic Starburst Chart...</span>
+        <span className="text-lg">Loading Topic Starburst Chart...</span>
       </div>
     );
   }
@@ -148,7 +151,7 @@ const TopicMindMap = () => {
         <Breadcrumb
           items={[
             { title: 'Home', link: '/' },
-            { title: 'Child Psychiatry', link: '/learn/psychiatry/child-psychiatry' },
+            { title: topic.categoryName || 'Category', link: topic.categorySlug ? `/learn/psychiatry/${topic.categorySlug}` : '/' },
             { title: topic.title },
           ]}
         />
@@ -158,7 +161,7 @@ const TopicMindMap = () => {
             <span>Add to Favorites</span>
           </button>
           <Link
-            to="/learn/psychiatry/child-psychiatry"
+            to={topic.categorySlug ? `/learn/psychiatry/${topic.categorySlug}` : '/'}
             className="flex items-center gap-1.5 text-xs font-extrabold text-navy hover:text-primaryBlue bg-white px-4 py-2 rounded-2xl border border-borderLine shadow-sm hover:shadow transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -179,7 +182,7 @@ const TopicMindMap = () => {
             {topic.title}
           </h1>
           <p className="text-sm md:text-base font-medium text-muted mt-1 max-w-3xl">
-            Here are the 16 comprehensive lesson orbits for this disorder. Click on ANY numbered lesson circle (such as <strong>1. History of ASD</strong> or <strong>5. Etiology</strong>) to enter the integrated Video lecture, MCQ evaluation, and clinical notes section.
+            Select any study module circle below to access its integrated video lecture, practice MCQ evaluations, and clinical synthesis notes.
           </p>
         </div>
 
@@ -192,7 +195,7 @@ const TopicMindMap = () => {
             }`}
           >
             <Network className="w-4 h-4" />
-            <span>Starburst Map (16 Modules)</span>
+            <span>Starburst Map View</span>
           </button>
           <button
             onClick={() => setViewMode('GRID')}
@@ -213,7 +216,9 @@ const TopicMindMap = () => {
             initialNodes={nodes}
             initialEdges={edges}
             className="h-[820px] lg:h-[880px]"
-            onNodeClick={(data) => navigate(`/lesson/${data.slug || 'history-of-asd'}`)}
+            onNodeClick={(data) => {
+              if (data.slug) navigate(`/lesson/${data.slug}`);
+            }}
           />
         </div>
       ) : (
@@ -224,7 +229,7 @@ const TopicMindMap = () => {
             return (
               <div
                 key={item._id}
-                onClick={() => navigate(`/lesson/${item.slug || 'history-of-asd'}`)}
+                onClick={() => navigate(`/lesson/${item.slug || ''}`)}
                 style={{ borderTopColor: item.color }}
                 className="bg-white border border-borderLine border-t-[6px] rounded-3xl p-6 shadow-soft hover:shadow-elevated hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
               >

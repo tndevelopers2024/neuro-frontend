@@ -14,6 +14,7 @@ import SubjectHome from './pages/student/SubjectHome.jsx';
 import CategoryBranchMap from './pages/student/CategoryBranchMap.jsx';
 import TopicMindMap from './pages/student/TopicMindMap.jsx';
 import LessonMaterials from './pages/student/LessonMaterials.jsx';
+import MaterialPlaylist from './pages/student/MaterialPlaylist.jsx';
 
 // Interactive Learning Engines
 import VideoPlayer from './pages/student/VideoPlayer.jsx';
@@ -43,6 +44,7 @@ const App = () => {
         <Route path="learn/:subjectSlug/:categorySlug" element={<CategoryBranchMap />} />
         <Route path="topic/:slug" element={<TopicMindMap />} />
         <Route path="lesson/:topicSlug" element={<LessonMaterials />} />
+        <Route path="playlist/:type/:topicSlug" element={<MaterialPlaylist />} />
 
         {/* Interactive Modules */}
         <Route path="video/:id" element={<VideoPlayer />} />
@@ -65,9 +67,13 @@ const App = () => {
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="categories" element={<ManageCategories />} />
         <Route path="topics" element={<ManageTopics />} />
-        <Route path="materials" element={<ManageMaterials />} />
+        <Route path="materials/upload" element={<ManageMaterials />} />
+        <Route path="materials/table" element={<ManageMaterials />} />
+        <Route path="materials" element={<Navigate to="/admin/materials/table" replace />} />
         <Route path="subjects" element={<ManageCategories />} />
-        <Route path="mcqs" element={<ManageMaterials />} />
+        <Route path="mcqs/create" element={<ManageMaterials />} />
+        <Route path="mcqs/table" element={<ManageMaterials />} />
+        <Route path="mcqs" element={<Navigate to="/admin/mcqs/table" replace />} />
       </Route>
 
       {/* Fallback routing */}

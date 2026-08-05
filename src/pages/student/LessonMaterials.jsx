@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Play, FileText, HelpCircle, ArrowLeft, ArrowRight, Clock, Star, Download, CheckCircle2, ShieldAlert, Sparkles, Bookmark as BookmarkIcon } from 'lucide-react';
+import { Play, FileText, HelpCircle, ArrowLeft, ArrowRight, Clock, Star, Download, CheckCircle2, ShieldAlert, Sparkles, Bookmark as BookmarkIcon, Layers, Video } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
 import toast from 'react-hot-toast';
@@ -30,24 +30,28 @@ const LessonMaterials = () => {
   const navigation = materialData?.navigation || {};
   const breadcrumbs = materialData?.breadcrumbs || [
     { title: 'Home', link: '/' },
-    { title: 'Child Psychiatry', link: '/learn/psychiatry/child-psychiatry' },
-    { title: 'Autism Spectrum Disorder', link: '/topic/autism-spectrum-disorder' },
+    { title: 'Study Modules', link: '/' },
     { title: topic.title },
   ];
 
   // Extract material items by type or supply rich interactive default demonstrations
-  const videoMaterial = materials.find((m) => m.type === 'VIDEO') || {
+  const uploadedVideos = materials.filter((m) => m.type === 'VIDEO');
+  const videoMaterials = uploadedVideos.length > 0 ? uploadedVideos : [{
     _id: '64aaaaa00000000000000001',
     title: `${topic.title} - HD Video Lecture`,
-    duration: '24 min video',
+    duration: '24 min',
     description: `Detailed board-review video analysis of ${topic.title} covering neurodevelopmental concepts, diagnostic assessment, and clinical protocols.`
-  };
+  }];
+  const videoMaterial = videoMaterials[0];
 
-  const noteMaterial = materials.find((m) => m.type === 'NOTES' || m.type === 'PDF') || {
+  const uploadedNotes = materials.filter((m) => m.type === 'NOTES' || m.type === 'PDF');
+  const noteMaterials = uploadedNotes.length > 0 ? uploadedNotes : [{
     _id: '64aaaaa00000000000000002',
     title: `${topic.title} - High-Yield Study Notes`,
-    description: `High-yield structured reading notes synthesizing key diagnostic criteria, epidemiological parameters, and clinical practice pearls for ${topic.title}.`
-  };
+    description: `High-yield structured reading notes synthesizing key diagnostic criteria, epidemiological parameters, and clinical practice pearls for ${topic.title}.`,
+    type: 'PDF'
+  }];
+  const noteMaterial = noteMaterials[0];
 
   const handleBookmark = async () => {
     try {
@@ -115,7 +119,15 @@ const LessonMaterials = () => {
         
         {/* CARD 1: WATCH VIDEO (Purple Theme #7435D5) */}
         <div
-          onClick={() => videoMaterial ? navigate(`/video/${videoMaterial._id}`) : toast.error('Video lecture coming shortly!')}
+          onClick={() => {
+            if (videoMaterials.length > 1) {
+              navigate(`/playlist/video/${topicSlug}`);
+            } else if (videoMaterials.length === 1 && videoMaterials[0]) {
+              navigate(`/video/${videoMaterials[0]._id}`);
+            } else {
+              toast.error('Video lecture coming shortly!');
+            }
+          }}
           className="bg-white border border-borderLine border-t-[8px] border-t-[#7435D5] rounded-3xl p-7 shadow-soft hover:shadow-elevated hover:-translate-y-2 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden"
         >
           <div>
@@ -124,19 +136,29 @@ const LessonMaterials = () => {
             </div>
             <span className="text-[11px] font-extrabold text-[#7435D5] uppercase tracking-widest">Visual Audio Lecture</span>
             <h2 className="text-xl md:text-2xl font-black text-navy group-hover:text-[#7435D5] transition-colors mt-1.5">
-              Watch Video
+              {videoMaterials.length > 1 ? `Watch Videos (${videoMaterials.length})` : 'Watch Video'}
             </h2>
             <p className="text-sm font-medium text-muted mt-3 leading-relaxed">
-              {videoMaterial?.description || 'Watch high-quality visual video lectures detailing Leo Kanner (1943), Hans Asperger, and diagnostic DSM revisions over decades.'}
+              {videoMaterials.length > 1
+                ? `Access ${videoMaterials.length} video lectures associated with this module. Click to explore the video playlist and choose a lecture to stream.`
+                : (videoMaterial?.description || 'Watch high-quality visual video lectures detailing Leo Kanner (1943), Hans Asperger, and diagnostic DSM revisions over decades.')}
             </p>
           </div>
 
           <div className="mt-8 pt-5 border-t border-borderLine/70 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#7435D5] bg-[#7435D5]/10 px-3 py-1 rounded-full">
-              <Clock className="w-3.5 h-3.5" /> {videoMaterial?.duration || '24 min'}
+              {videoMaterials.length > 1 ? (
+                <>
+                  <Layers className="w-3.5 h-3.5" /> {videoMaterials.length} Videos Available
+                </>
+              ) : (
+                <>
+                  <Clock className="w-3.5 h-3.5" /> {videoMaterial?.duration || '24 min'}
+                </>
+              )}
             </span>
             <div className="flex items-center gap-1.5 font-extrabold text-xs text-[#7435D5] group-hover:underline">
-              <span>Launch Video Player</span>
+              <span>{videoMaterials.length > 1 ? 'View Video Playlist' : 'Launch Video Player'}</span>
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
@@ -144,7 +166,15 @@ const LessonMaterials = () => {
 
         {/* CARD 2: READ LECTURE NOTES (Blue Theme #126BEE) */}
         <div
-          onClick={() => noteMaterial ? navigate(`/notes/${noteMaterial._id}`) : toast.error('Notes being indexed!')}
+          onClick={() => {
+            if (noteMaterials.length > 1) {
+              navigate(`/playlist/notes/${topicSlug}`);
+            } else if (noteMaterials.length === 1 && noteMaterials[0]) {
+              navigate(`/notes/${noteMaterials[0]._id}`);
+            } else {
+              toast.error('Notes being indexed!');
+            }
+          }}
           className="bg-white border border-borderLine border-t-[8px] border-t-primaryBlue rounded-3xl p-7 shadow-soft hover:shadow-elevated hover:-translate-y-2 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden"
         >
           <div>
@@ -153,19 +183,29 @@ const LessonMaterials = () => {
             </div>
             <span className="text-[11px] font-extrabold text-primaryBlue uppercase tracking-widest">Clinical Synthesis</span>
             <h2 className="text-xl md:text-2xl font-black text-navy group-hover:text-primaryBlue transition-colors mt-1.5">
-              Read Lecture Notes
+              {noteMaterials.length > 1 ? `Read Notes (${noteMaterials.length})` : 'Read Lecture Notes'}
             </h2>
             <p className="text-sm font-medium text-muted mt-3 leading-relaxed">
-              {noteMaterial?.description || 'Read comprehensive lecture notes complete with diagnostic comparison diagrams, timeline tables, and clinical practice pearls.'}
+              {noteMaterials.length > 1
+                ? `Explore ${noteMaterials.length} structured clinical documents and lecture synthesis files uploaded for this module.`
+                : (noteMaterial?.description || 'Read comprehensive lecture notes complete with diagnostic comparison diagrams, timeline tables, and clinical practice pearls.')}
             </p>
           </div>
 
           <div className="mt-8 pt-5 border-t border-borderLine/70 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-xs font-extrabold text-primaryBlue bg-[#E9F2FF] px-3 py-1 rounded-full">
-              <Download className="w-3.5 h-3.5" /> PDF & HTML
+              {noteMaterials.length > 1 ? (
+                <>
+                  <Layers className="w-3.5 h-3.5" /> {noteMaterials.length} Documents Available
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5" /> PDF & HTML
+                </>
+              )}
             </span>
             <div className="flex items-center gap-1.5 font-extrabold text-xs text-primaryBlue group-hover:underline">
-              <span>Open Reader</span>
+              <span>{noteMaterials.length > 1 ? 'Select Document' : 'Open Reader'}</span>
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
@@ -219,10 +259,10 @@ const LessonMaterials = () => {
         )}
 
         <button
-          onClick={() => navigate(navigation.parentMapLink || '/topic/autism-spectrum-disorder')}
+          onClick={() => navigate(navigation.parentMapLink || '/')}
           className="bg-secondaryBg hover:bg-white text-navy font-bold px-5 py-3 rounded-xl text-xs border border-borderLine shadow-xs transition-all"
         >
-          ⬆ Return to {navigation.parentMapTitle || 'Autism'} Mind Map
+          ⬆ Return to {navigation.parentMapTitle || 'Topic'} Mind Map
         </button>
 
         {navigation.next ? (

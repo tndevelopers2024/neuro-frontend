@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Navigate, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { LayoutDashboard, Brain, Activity, Compass, FileText, HelpCircle, Layers, Users, LogOut, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Brain, Activity, Compass, FileText, HelpCircle, Layers, Users, LogOut, ArrowLeft, ShieldCheck, PlusCircle, Table } from 'lucide-react';
 
 const AdminLayout = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -10,13 +10,28 @@ const AdminLayout = () => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
 
-  const adminNavs = [
-    { name: 'Analytics Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Subjects Engine', path: '/admin/subjects', icon: Brain },
-    { name: 'Category Orbits', path: '/admin/categories', icon: Activity },
-    { name: 'Topic Hierarchy & Maps', path: '/admin/topics', icon: Compass },
-    { name: 'Study Materials & Uploads', path: '/admin/materials', icon: FileText },
-    { name: 'MCQ & Quiz Builder', path: '/admin/mcqs', icon: HelpCircle },
+  const navGroups = [
+    {
+      title: 'OVERVIEW & STRUCTURE',
+      items: [
+        { name: 'Analytics Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+        { name: 'Subjects & Topics', path: '/admin/subjects', icon: Brain },
+      ]
+    },
+    {
+      title: 'STUDY MATERIALS',
+      items: [
+        { name: 'Upload Material', path: '/admin/materials/upload', icon: PlusCircle },
+        { name: 'Materials Table', path: '/admin/materials/table', icon: Table },
+      ]
+    },
+    {
+      title: 'BOARD ASSESSMENTS',
+      items: [
+        { name: 'Create MCQ', path: '/admin/mcqs/create', icon: PlusCircle },
+        { name: 'MCQs Table', path: '/admin/mcqs/table', icon: Table },
+      ]
+    }
   ];
 
   return (
@@ -34,26 +49,35 @@ const AdminLayout = () => {
             </div>
           </div>
 
-          <nav className="space-y-1.5">
-            {adminNavs.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.name}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                      isActive
-                        ? 'bg-primaryBlue text-white shadow-md font-bold'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`
-                  }
-                >
-                  <Icon className="w-5 h-5 shrink-0" />
-                  <span>{item.name}</span>
-                </NavLink>
-              );
-            })}
+          <nav className="space-y-6">
+            {navGroups.map((group) => (
+              <div key={group.title} className="space-y-2">
+                <div className="px-3 text-[11px] font-extrabold text-primaryBlue uppercase tracking-wider">
+                  {group.title}
+                </div>
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <NavLink
+                        key={item.name}
+                        to={item.path}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                            isActive
+                              ? 'bg-primaryBlue text-white shadow-md font-bold'
+                              : 'text-white/70 hover:text-white hover:bg-white/10'
+                          }`
+                        }
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span>{item.name}</span>
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </div>
 

@@ -1,202 +1,68 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Brain, Sparkles, LayoutGrid, Network, ChevronRight, BookOpen, Clock, Activity, Flame, Award, Bookmark as BookmarkIcon, FileText } from 'lucide-react';
+import { Brain, Sparkles, LayoutGrid, Network, ChevronRight, BookOpen, Clock, Activity, Flame, Award, Bookmark as BookmarkIcon, FileText, Search, X } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
 import MindMapContainer from '../../components/mindmap/MindMapContainer.jsx';
 
-// Complete dictionary of all 12 domain orbits and their expanded clinical subtopics
-const DEFAULT_CATEGORIES = [
-  {
-    _id: '1', name: 'Psycho-Therapy', slug: 'psycho-therapy', icon: 'MessageSquare', color: '#DB2674',
-    subtopics: [
-      { title: 'Cognitive Behavioral Therapy (CBT)', slug: 'cbt-therapy' },
-      { title: 'Psychodynamic Psychotherapy', slug: 'psychodynamic-therapy' },
-      { title: 'Supportive Psychotherapy', slug: 'supportive-therapy' },
-      { title: 'Interpersonal Therapy (IPT)', slug: 'interpersonal-therapy' },
-      { title: 'Family & Group Modalities', slug: 'family-group-therapy' },
-      { title: 'Mindfulness-Based Protocols', slug: 'mindfulness-protocols' }
-    ]
-  },
-  {
-    _id: '2', name: 'General Psychiatry', slug: 'general-psychiatry', icon: 'Brain', color: '#126BEE',
-    subtopics: [
-      { title: 'Mental Status Examination', slug: 'mental-status-examination' },
-      { title: 'Clinical Interview Skills', slug: 'clinical-interview-skills' },
-      { title: 'Case Formulation', slug: 'case-formulation' },
-      { title: 'Psychiatric Diagnosis', slug: 'psychiatric-diagnosis' },
-      { title: 'Treatment Planning', slug: 'treatment-planning' },
-      { title: 'Follow Up & Monitoring', slug: 'follow-up-monitoring' },
-      { title: 'Ethics & Communication', slug: 'ethics-communication' }
-    ]
-  },
-  {
-    _id: '3', name: 'Core Psychiatry', slug: 'core-psychiatry', icon: 'Stethoscope', color: '#21A447',
-    subtopics: [
-      { title: 'Psychopathology', slug: 'psychopathology' },
-      { title: 'Diagnostic Criteria', slug: 'diagnostic-criteria' },
-      { title: 'Classification (DSM-5-TR / ICD-11)', slug: 'classification-dsm5' },
-      { title: 'Assessment Tools', slug: 'assessment-tools' },
-      { title: 'Clinical Rating Scales', slug: 'rating-scales' },
-      { title: 'Treatment Principles', slug: 'treatment-principles' },
-      { title: 'Prognosis & Outcome', slug: 'prognosis-outcome' }
-    ]
-  },
-  {
-    _id: '4', name: 'De-Addiction', slug: 'de-addiction', icon: 'Pill', color: '#F17B18',
-    subtopics: [
-      { title: 'Substance Use Disorders', slug: 'substance-use-disorders' },
-      { title: 'Alcohol Use Disorder', slug: 'alcohol-use-disorder' },
-      { title: 'Opioid Use Disorder', slug: 'opioid-use-disorder' },
-      { title: 'Cannabis Use Disorder', slug: 'cannabis-use-disorder' },
-      { title: 'Nicotine Dependence', slug: 'nicotine-dependence' },
-      { title: 'Stimulant Use Disorder', slug: 'stimulant-use-disorder' },
-      { title: 'Detoxification & Rehab', slug: 'detox-rehab' }
-    ]
-  },
-  {
-    _id: '5', name: 'Neuro-Psychiatry & CLP', slug: 'neuro-psychiatry', icon: 'Activity', color: '#10B981',
-    subtopics: [
-      { title: 'Neuropsychiatric Disorders', slug: 'neuropsychiatric-disorders' },
-      { title: 'Epilepsy & Psychiatry', slug: 'epilepsy-psychiatry' },
-      { title: 'Stroke & Mental Health', slug: 'stroke-mental-health' },
-      { title: 'Neurocognitive Disorders', slug: 'neurocognitive-disorders' },
-      { title: 'Movement Disorders', slug: 'movement-disorders' },
-      { title: 'Consultation Liaison Psychiatry', slug: 'consultation-liaison' }
-    ]
-  },
-  {
-    _id: '6', name: 'Geriatric Psychiatry', slug: 'geriatric-psychiatry', icon: 'UserCheck', color: '#7435D5',
-    subtopics: [
-      { title: 'Late Life Depression', slug: 'late-life-depression' },
-      { title: 'Dementia Protocols', slug: 'dementia-protocols' },
-      { title: 'Delirium Management', slug: 'delirium-management' },
-      { title: 'Anxiety in Elderly', slug: 'anxiety-in-elderly' },
-      { title: 'Geriatric Psychopharmacology', slug: 'geriatric-psychopharmacology' },
-      { title: 'Palliative Care Psychiatry', slug: 'palliative-care-psychiatry' }
-    ]
-  },
-  {
-    _id: '7', name: 'Special Topics', slug: 'special-topics', icon: 'Star', color: '#3B82F6',
-    subtopics: [
-      { title: 'Psychiatric Emergencies', slug: 'psychiatric-emergencies' },
-      { title: 'Suicide Prevention Protocols', slug: 'suicide-prevention' },
-      { title: 'Violence & Risk Assessment', slug: 'risk-assessment' },
-      { title: 'Trauma & PTSD', slug: 'trauma-ptsd' },
-      { title: 'Sleep & Wake Disorders', slug: 'sleep-disorders' },
-      { title: 'Eating & Feeding Disorders', slug: 'eating-disorders' }
-    ]
-  },
-  {
-    _id: '8', name: 'Community Psychiatry & Rehab', slug: 'community-psychiatry', icon: 'Users', color: '#0D9488',
-    subtopics: [
-      { title: 'Community Mental Health', slug: 'community-mental-health' },
-      { title: 'Rehabilitation Services', slug: 'rehab-services' },
-      { title: 'Social Skills Training', slug: 'social-skills-training' },
-      { title: 'Occupational Rehabilitation', slug: 'occupational-rehab' },
-      { title: 'Family Psychoeducation', slug: 'family-psychoeducation' },
-      { title: 'Mental Health Policy', slug: 'mental-health-policy' }
-    ]
-  },
-  {
-    _id: '9', name: 'Forensic Psychiatry', slug: 'forensic-psychiatry', icon: 'Scale', color: '#EA580C',
-    subtopics: [
-      { title: 'Medico-legal Aspects', slug: 'medico-legal-aspects' },
-      { title: 'Criminal Behavior & Crime', slug: 'criminal-behavior' },
-      { title: 'Mental Health Law', slug: 'mental-health-law' },
-      { title: 'Forensic Evaluation', slug: 'forensic-evaluation' },
-      { title: 'Insanity & Responsibility', slug: 'insanity-responsibility' },
-      { title: 'Courtroom Testimony Skills', slug: 'courtroom-skills' }
-    ]
-  },
-  {
-    _id: '10', name: 'Neuro-Biology', slug: 'neuro-biology', icon: 'Zap', color: '#2563EB',
-    subtopics: [
-      { title: 'Neuroanatomy Foundations', slug: 'neuroanatomy' },
-      { title: 'Neurotransmitters & Pathways', slug: 'neurotransmitters' },
-      { title: 'Neurophysiology Basics', slug: 'neurophysiology' },
-      { title: 'Neuroimaging Methods', slug: 'neuroimaging' },
-      { title: 'Genetics & Epigenetics', slug: 'genetics-epigenetics' },
-      { title: 'Brain & Behavior Matrix', slug: 'brain-behavior' }
-    ]
-  },
-  {
-    _id: '11', name: 'Child Psychiatry', slug: 'child-psychiatry', icon: 'Baby', color: '#06B6D4',
-    subtopics: [
-      { title: 'Neurodevelopmental Disorders', slug: 'autism-spectrum-disorder' },
-      { title: 'Autism Spectrum Disorder (ASD)', slug: 'autism-spectrum-disorder' },
-      { title: 'Attention Deficit (ADHD)', slug: 'adhd-assessment' },
-      { title: 'Behavioral & Conduct Disorders', slug: 'behavioral-disorders' },
-      { title: 'Childhood Psychopathology', slug: 'childhood-psychopathology' },
-      { title: 'Assessment & Rating Scales', slug: 'child-rating-scales' },
-      { title: 'Child Psychopharmacology', slug: 'child-psychopharmacology' }
-    ]
-  },
-  {
-    _id: '12', name: 'Psycho-Pharmacology', slug: 'psycho-pharmacology', icon: 'ShieldPlus', color: '#E11D48',
-    subtopics: [
-      { title: 'Antidepressant Agents (SSRIs)', slug: 'antidepressants' },
-      { title: 'Typical & Atypical Antipsychotics', slug: 'antipsychotics' },
-      { title: 'Lithium & Mood Stabilizers', slug: 'mood-stabilizers' },
-      { title: 'Anxiolytics & Hypnotics', slug: 'anxiolytics' },
-      { title: 'Stimulant Medications', slug: 'stimulants' },
-      { title: 'Electroconvulsive Therapy (ECT)', slug: 'ect-therapy' },
-      { title: 'Side Effects & Drug Interactions', slug: 'side-effects-management' }
-    ]
-  }
-];
+// Categories and clinical subtopics are loaded dynamically from the database via API
 
 const SubjectHome = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('ALL');
-  const [viewMode, setViewMode] = useState('MAP'); // 'MAP' or 'GRID'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState('GRID'); // 'MAP' or 'GRID'
   const [openCategory, setOpenCategory] = useState(null);
 
   // Fetch Psychiatry subject categories from API
   const { data: subjectData, isLoading } = useQuery({
     queryKey: ['subjectCategories', 'psychiatry'],
     queryFn: () => api.get('/subjects/psychiatry/categories'),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 1000,
   });
 
-  // Use backend categories if fully populated, otherwise combine/fallback to ensure all 12 appear
-  const rawCategories = (subjectData?.categories && subjectData.categories.length > 0) 
-    ? subjectData.categories 
-    : DEFAULT_CATEGORIES;
+  // Dynamically derive topics and subtopics directly from live database records
+  const rawCategories = subjectData?.categories || [];
 
-  // Ensure every category has consistent color, icon formatting, and subtopics
   const categories = useMemo(() => {
+    const palette = ['#126BEE', '#21A447', '#F17B18', '#7435D5', '#13A7B5', '#DB2674', '#10B981', '#EA580C'];
     return rawCategories.map((c, idx) => {
-      const fallback = DEFAULT_CATEGORIES[idx % DEFAULT_CATEGORIES.length];
-      const nameStr = (c.name || c.title || fallback.name).toLowerCase();
-      const isCoreDomain = ['psychiatry', 'therapy', 'addiction', 'biology', 'forensic', 'community', 'pharmacology', 'special', 'clp'].some(k => nameStr.includes(k)) && !nameStr.includes('test');
-
       return {
-        _id: c._id || c.id || fallback._id,
-        name: c.name || c.title || fallback.name,
-        slug: c.slug || fallback.slug,
-        icon: c.icon || fallback.icon,
-        color: c.color || c.themeColor || fallback.color,
-        subtopics: c.subtopics || (isCoreDomain ? fallback.subtopics : []),
+        ...c,
+        _id: c._id || c.id || `cat-${idx}`,
+        name: c.name || c.title || 'Unnamed Topic',
+        slug: c.slug || `topic-${idx}`,
+        icon: c.icon || 'Brain',
+        color: c.color || c.themeColor || palette[idx % palette.length],
+        subtopics: c.subtopics || [],
       };
     });
   }, [rawCategories]);
 
-  // Filter categories by tabs
+  // Filter categories and subtopics by search query
   const filteredCategories = useMemo(() => {
-    if (activeTab === 'CORE') {
-      return categories.filter((c) => ['General Psychiatry', 'Core Psychiatry', 'Neuro-Biology', 'Psycho-Pharmacology'].some(val => c.name.includes(val)));
-    }
-    if (activeTab === 'SPECIALTY') {
-      return categories.filter((c) => ['Child Psychiatry', 'Geriatric Psychiatry', 'De-Addiction', 'Forensic Psychiatry'].some(val => c.name.includes(val)));
-    }
-    if (activeTab === 'THERAPY') {
-      return categories.filter((c) => ['Psycho-Therapy', 'Community Psychiatry', 'Special Topics', 'Neuro-Psychiatry'].some(val => c.name.includes(val)));
-    }
-    return categories;
-  }, [categories, activeTab]);
+    if (!searchQuery.trim()) return categories;
+    const query = searchQuery.toLowerCase().trim();
+
+    return categories
+      .map((cat) => {
+        const catNameMatches = (cat.name || '').toLowerCase().includes(query) || (cat.description || '').toLowerCase().includes(query);
+        const matchedSubtopics = (cat.subtopics || []).filter((sub) =>
+          (sub.title || '').toLowerCase().includes(query) || (sub.description || '').toLowerCase().includes(query)
+        );
+
+        if (catNameMatches || matchedSubtopics.length > 0) {
+          return {
+            ...cat,
+            // If the domain title itself matched, display all subtopics; otherwise focus purely on matching subtopics
+            subtopics: catNameMatches ? cat.subtopics : matchedSubtopics,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }, [categories, searchQuery]);
 
   // Transform into radial React Flow coordinates centered at (1000, 1000) with radius 400 for clean subtopic expansion
   const { nodes, edges } = useMemo(() => {
@@ -281,11 +147,7 @@ const SubjectHome = () => {
               color: cat.color,
               alignRight: alignRight,
               onNodeClick: () => {
-                const targetSlug =
-                  sub.slug === 'autism-spectrum-disorder' || sub.title.includes('Autism')
-                    ? 'autism-spectrum-disorder'
-                    : sub.slug;
-                navigate(`/topic/${targetSlug}`);
+                navigate(`/topic/${sub.slug}`);
               },
             },
           });
@@ -296,7 +158,7 @@ const SubjectHome = () => {
             target: subNodeId,
             type: 'default',
             style: { stroke: `${cat.color}45`, strokeWidth: 1.8 },
-            animated: sub.title.includes('Autism'),
+            animated: true,
           });
         });
       }
@@ -357,30 +219,48 @@ const SubjectHome = () => {
         </div>
       </div>
 
-      {/* Domain Category Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-borderLine">
-        {[
-          { key: 'ALL', label: 'All 12 Domain Orbits' },
-          { key: 'CORE', label: 'Core Diagnostics & Biology' },
-          { key: 'SPECIALTY', label: 'Child, Geriatric & Forensic' },
-          { key: 'THERAPY', label: 'Therapeutics & Rehab' },
-        ].map((tab) => (
+      {/* Search Bar Filter */}
+      <div className="bg-white border border-borderLine rounded-2xl p-3 shadow-soft flex items-center gap-3 transition-all focus-within:border-primaryBlue focus-within:ring-2 focus-within:ring-primaryBlue/15">
+        <div className="p-2.5 bg-secondaryBg rounded-xl text-primaryBlue flex items-center justify-center shrink-0">
+          <Search className="w-5 h-5" />
+        </div>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search domain orbits, clinical topics, or study modules (e.g., ASD, Diagnostics, Schizophrenia)..."
+          className="w-full bg-transparent border-none text-navy text-sm font-extrabold placeholder:text-muted placeholder:font-normal focus:outline-none"
+        />
+        {searchQuery && (
           <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-5 py-2.5 rounded-2xl text-xs md:text-sm font-extrabold whitespace-nowrap transition-all ${
-              activeTab === tab.key
-                ? 'bg-navy text-white shadow-md scale-105'
-                : 'bg-white text-muted hover:bg-slate-100 hover:text-navy border border-borderLine'
-            }`}
+            onClick={() => setSearchQuery('')}
+            className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-muted hover:text-navy transition-colors shrink-0 flex items-center gap-1.5 text-xs font-bold px-3"
+            title="Clear Search"
           >
-            {tab.label}
+            <X className="w-4 h-4" />
+            <span className="hidden sm:inline">Clear</span>
           </button>
-        ))}
+        )}
       </div>
 
       {/* Interactive Canvas or Grid Display */}
-      {viewMode === 'MAP' ? (
+      {filteredCategories.length === 0 ? (
+        <div className="bg-white border border-borderLine rounded-3xl p-16 text-center shadow-soft max-w-2xl mx-auto my-12 animate-fadeIn">
+          <div className="w-16 h-16 bg-[#FFF2F2] text-[#DC2626] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
+            <Search className="w-8 h-8 opacity-60" />
+          </div>
+          <h3 className="text-xl font-black text-navy mb-2">No Matching Domains or Subtopics Found</h3>
+          <p className="text-sm text-muted font-medium mb-6">
+            We couldn't find any study category orbits or clinical subtopics matching "<strong className="text-navy font-bold">{searchQuery}</strong>". Try adjusting your keyword search.
+          </p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="px-6 py-2.5 bg-primaryBlue text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-blue-600 transition-colors"
+          >
+            Clear Search Filter
+          </button>
+        </div>
+      ) : viewMode === 'MAP' ? (
         <div className="relative">
           <MindMapContainer
             initialNodes={nodes}
@@ -419,9 +299,29 @@ const SubjectHome = () => {
                   <h3 className="text-lg font-black text-navy uppercase tracking-tight group-hover:text-primaryBlue transition-colors">
                     {cat.name}
                   </h3>
-                  <p className="text-xs font-semibold text-muted mt-2">
-                    Click to enter clinical branch pathways, subtopic hierarchies, video modules, and board MCQs.
+                  <p className="text-xs font-semibold text-muted mt-2 mb-3">
+                    Click to explore branch pathways, video modules, and board MCQs.
                   </p>
+
+                  {cat.subtopics && cat.subtopics.length > 0 && (
+                    <div className="space-y-1.5 mt-3 pt-3 border-t border-borderLine/60">
+                      <div className="text-[11px] font-extrabold text-navy uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <span style={{ backgroundColor: cat.color }} className="w-2 h-2 rounded-full inline-block shrink-0" />
+                        {cat.subtopics.length} Clinical Subtopics
+                      </div>
+                      {cat.subtopics.slice(0, 4).map((sub, sIdx) => (
+                        <div key={sIdx} className="text-xs font-bold text-slate-700 bg-secondaryBg px-2.5 py-1.5 rounded-lg flex items-center gap-2 truncate">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+                          <span className="truncate">{sub.title}</span>
+                        </div>
+                      ))}
+                      {cat.subtopics.length > 4 && (
+                        <div className="text-[11px] font-extrabold text-primaryBlue px-1 pt-1">
+                          + {cat.subtopics.length - 4} more clinical subtopics...
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-borderLine flex items-center justify-between text-xs font-bold text-navy group-hover:text-primaryBlue">

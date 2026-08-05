@@ -262,6 +262,7 @@ const ManageCategories = () => {
     queryFn: () => api.get('/topics?limit=200'),
     staleTime: 20 * 1000,
   });
+
   const allTopics = useMemo(() => {
     return topData?.topics || [];
   }, [topData]);
@@ -323,9 +324,9 @@ const ManageCategories = () => {
         icon: subForm.icon,
         color: subForm.color || selectedParentCat?.color || '#126BEE',
         displayOrder: subForm.displayOrder || 1,
-        level: 2, // Subtopic / Branch level
+        level: selectedParentCat?.isLevel3 ? 3 : 2, // Sub-subtopic level vs Subtopic level
         category: selectedParentCat?.id,
-        parentTopic: null, // Directly attached to category center node
+        parentTopic: selectedParentCat?.parentTopic || null,
         slug: subForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
       };
 
@@ -372,6 +373,34 @@ const ManageCategories = () => {
     setIsSubModalOpen(true);
   };
 
+  const openAddLevel3Modal = (sub, cat) => {
+    setSelectedParentCat({ 
+      id: cat._id, 
+      name: `${cat.name} ➔ ${sub.title}`, 
+      color: sub.color || cat.color || '#126BEE', 
+      icon: sub.icon || cat.icon || 'Puzzle',
+      parentTopic: sub._id,
+      isLevel3: true 
+    });
+    setEditingSubId(null);
+    setSubForm({ title: '', description: '', icon: sub.icon || cat.icon || 'Puzzle', color: sub.color || cat.color || '#126BEE', displayOrder: 1 });
+    setIsSubModalOpen(true);
+  };
+
+  const openEditLevel3Modal = (childSub, sub, cat) => {
+    setSelectedParentCat({ 
+      id: cat._id, 
+      name: `${cat.name} ➔ ${sub.title}`, 
+      color: sub.color || cat.color || '#126BEE', 
+      icon: sub.icon || cat.icon || 'Puzzle',
+      parentTopic: sub._id,
+      isLevel3: true 
+    });
+    setEditingSubId(childSub._id);
+    setSubForm({ title: childSub.title, description: childSub.description || '', icon: childSub.icon || 'Puzzle', color: childSub.color || sub.color || '#126BEE', displayOrder: childSub.displayOrder || 1 });
+    setIsSubModalOpen(true);
+  };
+
   return (
     <div className="space-y-8 animate-fadeIn pb-24 relative">
       {/* Header Banner with Create Button */}
@@ -414,9 +443,10 @@ const ManageCategories = () => {
           {categories.map((cat, idx) => {
             const CatIconComp = Icons[cat.icon || 'Brain'] || Icons.Brain;
 
-            // Filter database subtopics belonging to this category, or populate from comprehensive domain clinical subtopics
+            // Filter database subtopics belonging to this category (Level-2 direct subtopics)
             const dbSubtopics = allTopics.filter(t => 
-              (t.category?._id === cat._id) || (t.category === cat._id) || (typeof t.category === 'string' && t.category === cat._id?.toString())
+              ((t.category?._id === cat._id) || (t.category === cat._id) || (typeof t.category === 'string' && t.category === cat._id?.toString())) &&
+              (!t.parentTopic || t.parentTopic === null || t.parentTopic === '')
             );
             const catSubtopics = dbSubtopics.length > 0 
               ? dbSubtopics 
@@ -486,34 +516,85 @@ const ManageCategories = () => {
                     </button>
                   </div>
 
-                  <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                     {catSubtopics.map((sub) => {
                       const SubIconComp = Icons[sub.icon || 'Puzzle'] || Icons.Puzzle;
+                      const childSubtopics = allTopics.filter(t => {
+                        const pId = t.parentTopic?._id || t.parentTopic;
+                        return pId && pId.toString() === sub._id?.toString();
+                      });
+
                       return (
-                        <div key={sub._id} className="flex items-center justify-between p-2.5 bg-secondaryBg hover:bg-[#E9F2FF]/50 rounded-xl border border-borderLine transition-colors group">
-                          <div className="flex items-center gap-2.5 overflow-hidden">
-                            <div style={{ color: sub.color || cat.color || '#126BEE' }} className="shrink-0">
-                              <SubIconComp className="w-4 h-4" />
+                        <div key={sub._id} className="p-2 bg-secondaryBg rounded-2xl border border-borderLine space-y-1.5">
+                          <div className="flex items-center justify-between p-1.5 rounded-xl hover:bg-white transition-colors group">
+                            <div className="flex items-center gap-2.5 overflow-hidden">
+                              <div style={{ color: sub.color || cat.color || '#126BEE' }} className="shrink-0">
+                                <SubIconComp className="w-4 h-4" />
+                              </div>
+                              <span className="text-xs font-extrabold text-navy truncate">{sub.title}</span>
                             </div>
-                            <span className="text-xs font-extrabold text-navy truncate">{sub.title}</span>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => openAddLevel3Modal(sub, cat)}
+                                className="px-2 py-1 rounded-lg bg-[#E9F2FF] hover:bg-primaryBlue text-primaryBlue hover:text-white font-extrabold text-[10px] flex items-center gap-1 transition-all shadow-xs"
+                                title="Add Sub-Subtopic under this Subtopic"
+                              >
+                                <Plus className="w-3 h-3 stroke-[3]" />
+                                <span>Sub-Subtopic</span>
+                              </button>
+                              <button
+                                onClick={() => openEditSubtopicModal(sub, cat)}
+                                className="p-1.5 rounded-lg hover:bg-white text-muted hover:text-primaryBlue transition-colors"
+                                title="Edit Subtopic via Popup"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => deleteSubtopic(sub._id, sub.title)}
+                                className="p-1.5 rounded-lg hover:bg-[#FFF2F2] text-muted hover:text-[#DC2626] transition-colors"
+                                title="Delete Subtopic"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              onClick={() => openEditSubtopicModal(sub, cat)}
-                              className="p-1.5 rounded-lg hover:bg-white text-muted hover:text-primaryBlue transition-colors"
-                              title="Edit Subtopic via Popup"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => deleteSubtopic(sub._id, sub.title)}
-                              className="p-1.5 rounded-lg hover:bg-[#FFF2F2] text-muted hover:text-[#DC2626] transition-colors"
-                              title="Delete Subtopic"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                          {/* Render attached Level 3 Sub-subtopics */}
+                          {childSubtopics.length > 0 && (
+                            <div className="pl-3 pr-1 space-y-1 border-l-2 border-primaryBlue/30 ml-2.5 pt-1">
+                              {childSubtopics.map((child) => {
+                                const ChildIconComp = Icons[child.icon || 'BookOpen'] || Icons.BookOpen;
+                                return (
+                                  <div key={child._id} className="flex items-center justify-between p-2 bg-white rounded-xl border border-borderLine shadow-xs hover:border-primaryBlue/40 transition-colors">
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                      <span className="text-primaryBlue font-black text-xs">└</span>
+                                      <div style={{ color: child.color || '#8B5CF6' }} className="shrink-0">
+                                        <ChildIconComp className="w-3.5 h-3.5" />
+                                      </div>
+                                      <span className="text-[11px] font-bold text-navy truncate">{child.title}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <button
+                                        onClick={() => openEditLevel3Modal(child, sub, cat)}
+                                        className="p-1 rounded-lg hover:bg-secondaryBg text-muted hover:text-primaryBlue transition-colors"
+                                        title="Edit Sub-Subtopic"
+                                      >
+                                        <Edit className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => deleteSubtopic(child._id, child.title)}
+                                        className="p-1 rounded-lg hover:bg-[#FFF2F2] text-muted hover:text-[#DC2626] transition-colors"
+                                        title="Delete Sub-Subtopic"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
