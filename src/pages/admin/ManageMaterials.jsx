@@ -1,9 +1,18 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, Upload, Trash2, Video, File, Save, CheckCircle, Edit, HelpCircle, Sparkles, Plus, Layers, Play, BookOpen, CheckCircle2, Search, Filter, X, Table, PlusCircle, RotateCcw } from 'lucide-react';
+import { FileText, Upload, Trash2, Video, File, Save, CheckCircle, Edit, HelpCircle, Sparkles, Plus, Layers, Play, BookOpen, CheckCircle2, Search, Filter, X, Table, PlusCircle, RotateCcw, Eye } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
+
+const getFileUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('/uploads')) {
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    return `${baseUrl.replace('/api', '')}${url}`;
+  }
+  return url;
+};
 
 const ManageMaterials = () => {
   const location = useLocation();
@@ -17,14 +26,17 @@ const ManageMaterials = () => {
                     location.pathname.includes('/mcqs') ? 'TABLE_MCQS' : 'TABLE_MATERIALS';
   
   // Materials state
-  const [matForm, setMatForm] = useState({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '24 min' });
+  const [matForm, setMatForm] = useState({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '' });
   const [editingMatId, setEditingMatId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedMatSubject, setSelectedMatSubject] = useState('');
   const [selectedMatCategory, setSelectedMatCategory] = useState('');
   const [selectedMatSubtopic, setSelectedMatSubtopic] = useState('');
   const [selectedMatSubSubtopic, setSelectedMatSubSubtopic] = useState('');
+  const [previewMaterial, setPreviewMaterial] = useState(null);
+  const [matTypeTab, setMatTypeTab] = useState('ALL');
 
   // MCQs state
   const [mcqForm, setMcqForm] = useState({ topic: '', question: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'C', difficulty: 'Medium', explanation: '' });
@@ -128,7 +140,7 @@ const ManageMaterials = () => {
         videoUrl: item.videoUrl || '',
         fileUrl: item.fileUrl || '',
         richTextContent: item.richTextContent || '',
-        duration: item.duration || '24 min',
+        duration: item.duration || '',
       });
       const matchedSub = topics.find(t => (t._id || t)?.toString() === subId?.toString());
       if (matchedSub) {
@@ -188,7 +200,7 @@ const ManageMaterials = () => {
   useEffect(() => {
     if (!location.state?.editMatItem && activeTab !== 'UPLOAD_MATERIALS' && editingMatId) {
       setEditingMatId(null);
-      setMatForm({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '24 min' });
+      setMatForm({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '' });
       setSelectedFile(null);
     }
     if (!location.state?.editMcqItem && activeTab !== 'UPLOAD_MCQS' && editingMcqId) {
@@ -265,8 +277,16 @@ const ManageMaterials = () => {
   };
 
   const filteredMaterials = useMemo(() => {
-    return materials.filter(m => checkItemMatch(m.topic, m.title, m.description, m.type || m.topic?.title));
-  }, [materials, filterSubject, filterTopic, filterSubtopic, filterSubSubtopic, searchQuery, topics, categories]);
+    let filtered = materials.filter(m => checkItemMatch(m.topic, m.title, m.description, m.type || m.topic?.title));
+    
+    if (matTypeTab === 'VIDEO') {
+      filtered = filtered.filter(m => m.type === 'VIDEO');
+    } else if (matTypeTab === 'DOC') {
+      filtered = filtered.filter(m => m.type === 'NOTES' || m.type === 'PDF');
+    }
+    
+    return filtered;
+  }, [materials, filterSubject, filterTopic, filterSubtopic, filterSubSubtopic, searchQuery, topics, categories, matTypeTab]);
 
   const filteredMCQs = useMemo(() => {
     return mcqs.filter(q => checkItemMatch(q.topic, q.question, q.explanation, q.topic?.title));
@@ -404,6 +424,10 @@ const ManageMaterials = () => {
   const saveMaterial = async (e) => {
     e.preventDefault();
     if (!matForm.topic) return toast.error('Please select an associated Subtopic for this study material.');
+    
+    if (!editingMatId && !selectedFile) {
+      return toast.error(`Please select a ${matForm.type === 'VIDEO' ? 'video' : 'document'} file to upload.`);
+    }
 
     setIsUploading(true);
     try {
@@ -413,22 +437,38 @@ const ManageMaterials = () => {
       formData.append('description', matForm.description);
       formData.append('type', matForm.type);
       formData.append('duration', matForm.duration);
+      if (matForm.richTextContent) formData.append('richTextContent', matForm.richTextContent);
       if (matForm.videoUrl) formData.append('videoUrl', matForm.videoUrl);
       if (matForm.fileUrl) formData.append('fileUrl', matForm.fileUrl);
-      if (matForm.richTextContent) formData.append('richTextContent', matForm.richTextContent);
-      if (selectedFile) formData.append('file', selectedFile);
+
+      if (selectedFile) {
+        if (selectedFile.size > 100 * 1024 * 1024) {
+          setIsUploading(false);
+          return toast.error('Video is too large. Maximum size is 100MB.');
+        }
+        formData.append('file', selectedFile);
+      }
 
       const wasEditing = editingMatId;
+      
+      const uploadConfig = {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        }
+      };
+
       if (wasEditing) {
-        await api.put(`/materials/${wasEditing}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.put(`/materials/${wasEditing}`, formData, uploadConfig);
         toast.success('🎉 Study Material updated successfully!');
       } else {
-        await api.post('/materials/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.post('/materials/upload', formData, uploadConfig);
         toast.success('🎉 Study Material uploaded and published!');
       }
       queryClient.invalidateQueries(['adminMaterials']);
       setEditingMatId(null);
-      setMatForm({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '24 min' });
+      setMatForm({ topic: '', title: '', description: '', type: 'VIDEO', videoUrl: '', fileUrl: '', richTextContent: '', duration: '' });
       setSelectedMatSubject('');
       setSelectedMatCategory('');
       setSelectedMatSubtopic('');
@@ -439,6 +479,7 @@ const ManageMaterials = () => {
       toast.error(err?.response?.data?.message || 'Failed to save study material.');
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -464,7 +505,7 @@ const ManageMaterials = () => {
       videoUrl: item.videoUrl || '',
       fileUrl: item.fileUrl || '',
       richTextContent: item.richTextContent || '',
-      duration: item.duration || '24 min',
+      duration: item.duration || '',
     });
 
     const matchedSub = topics.find(t => t._id === subId || t._id?.toString() === subId?.toString());
@@ -625,7 +666,7 @@ const ManageMaterials = () => {
                     }}
                     className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue shadow-xs"
                   >
-                    <option value="">-- 1. Select Subject --</option>
+                    <option value="">1. Select Subject</option>
                     {subjects.map((sub) => (
                       <option key={sub._id} value={sub._id}>{sub.name}</option>
                     ))}
@@ -645,7 +686,7 @@ const ManageMaterials = () => {
                     disabled={!selectedMatSubject && categories.length > 0}
                     className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="">-- 2. Select Topic --</option>
+                    <option value="">2. Select Topic</option>
                     {matAvailableTopics.map((cat) => (
                       <option key={cat._id} value={cat._id}>{cat.name}</option>
                     ))}
@@ -666,7 +707,7 @@ const ManageMaterials = () => {
                     disabled={!selectedMatCategory && topics.length > 0}
                     className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-black text-sm text-primaryBlue outline-none focus:border-primaryBlue shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="">-- 3. Select Subtopic --</option>
+                    <option value="">3. Select Subtopic</option>
                     {matAvailableSubtopics.map((t) => (
                       <option key={t._id} value={t._id}>{t.title}</option>
                     ))}
@@ -692,10 +733,10 @@ const ManageMaterials = () => {
                   >
                     <option value="">
                       {!selectedMatSubtopic 
-                        ? '-- 4. Select Sub-subtopic --' 
+                        ? '4. Select Sub-subtopic' 
                         : matAvailableSubSubtopics.length === 0 
-                          ? '-- No Sub-subtopics present --' 
-                          : '-- Attach to parent or select --'}
+                          ? 'No Sub-subtopics present' 
+                          : 'Attach to parent or select'}
                     </option>
                     {matAvailableSubSubtopics.map((t) => (
                       <option key={t._id} value={t._id}>└─ {t.title}</option>
@@ -705,30 +746,16 @@ const ManageMaterials = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-navy mb-1.5">Material Format Type *</label>
-                <select
-                  value={matForm.type}
-                  onChange={(e) => setMatForm({ ...matForm, type: e.target.value })}
-                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
-                >
-                  <option value="VIDEO">📹 YouTube Video Lecture Module (In-App Player)</option>
-                  <option value="NOTES">📝 Structured Lecture Notes (HTML / Markdown)</option>
-                  <option value="PDF">📑 Downloadable Clinical PDF Document</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-navy mb-1.5">Duration or Page Count</label>
-                <input
-                  type="text"
-                  placeholder="e.g., 24 min video or 12 pages"
-                  value={matForm.duration}
-                  onChange={(e) => setMatForm({ ...matForm, duration: e.target.value })}
-                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
-                />
-              </div>
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-navy mb-1.5">Material Format Type *</label>
+              <select
+                value={matForm.type}
+                onChange={(e) => setMatForm({ ...matForm, type: e.target.value })}
+                className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
+              >
+                <option value="VIDEO">Video Upload</option>
+                <option value="PDF">Document Upload</option>
+              </select>
             </div>
             
             <div>
@@ -755,46 +782,71 @@ const ManageMaterials = () => {
             </div>
 
             {matForm.type === 'VIDEO' ? (
-              <div className="bg-[#FFF5F5] p-5 rounded-2xl border border-red-200/60 space-y-2">
+              <div className="bg-[#FFF5F5] p-5 rounded-2xl border border-red-200/60 space-y-3">
                 <div className="flex items-center gap-2 text-xs font-extrabold text-red-600 uppercase tracking-wider">
                   <Video className="w-4 h-4" />
-                  <span>YouTube Video Link (In-App Native Playback)</span>
+                  <span>Upload Video Lecture</span>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-navy mb-1">YouTube Video Link or Embed URL *</label>
+                  <label className="block text-xs font-bold text-navy mb-1">Attach Video File *</label>
                   <input
-                    type="text"
-                    required={matForm.type === 'VIDEO'}
-                    placeholder="e.g., https://www.youtube.com/watch?v=XXXXX or https://youtu.be/XXXXX"
-                    value={matForm.videoUrl}
-                    onChange={(e) => setMatForm({ ...matForm, videoUrl: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-semibold text-sm text-navy outline-none focus:border-red-500 shadow-xs"
+                    type="file"
+                    required={!editingMatId}
+                    accept="video/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      setSelectedFile(file);
+                      if (file && file.type.startsWith('video/')) {
+                        const videoNode = document.createElement('video');
+                        videoNode.preload = 'metadata';
+                        videoNode.onloadedmetadata = () => {
+                          window.URL.revokeObjectURL(videoNode.src);
+                          const duration = videoNode.duration;
+                          const m = Math.floor(duration / 60);
+                          const s = Math.floor(duration % 60);
+                          const formattedDuration = `${m}:${s < 10 ? '0' : ''}${s}`;
+                          setMatForm(prev => ({ ...prev, duration: formattedDuration }));
+                        };
+                        videoNode.src = URL.createObjectURL(file);
+                      }
+                    }}
+                    className="w-full max-w-md p-3 rounded-xl bg-white border border-borderLine text-xs font-bold text-navy file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#FFE5E5] file:text-red-600 cursor-pointer"
                   />
                   <p className="text-[11px] text-muted font-medium mt-1.5 flex items-center gap-1">
-                    🔒 Students will watch this video exclusively inside the app. Their timestamp will be saved automatically so they can resume right where they left off!
+                    🔒 Students will watch this video exclusively inside the app. Their timestamp will be saved automatically.
                   </p>
                 </div>
               </div>
             ) : (
               <div className="space-y-3 bg-secondaryBg/60 p-5 rounded-2xl border border-borderLine">
-                <div>
-                  <label className="block text-xs font-bold text-navy mb-1">Structured HTML or Markdown Reading Synthesis</label>
-                  <textarea
-                    rows={6}
-                    placeholder="Paste formatted clinical reading notes, HTML tables, or practice pearls here..."
-                    value={matForm.richTextContent}
-                    onChange={(e) => setMatForm({ ...matForm, richTextContent: e.target.value })}
-                    className="w-full p-4 rounded-xl bg-white border border-borderLine font-medium text-sm text-navy outline-none font-mono"
-                  />
+                <div className="flex items-center gap-2 text-xs font-extrabold text-primaryBlue uppercase tracking-wider">
+                  <File className="w-4 h-4" />
+                  <span>Upload Document</span>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-navy mb-1">Or Attach PDF Clinical Guide Document</label>
+                  <label className="block text-xs font-bold text-navy mb-1">Attach Document (PDF) *</label>
                   <input
                     type="file"
+                    required={!editingMatId}
                     accept="application/pdf"
                     onChange={(e) => setSelectedFile(e.target.files[0])}
                     className="w-full max-w-md p-3 rounded-xl bg-white border border-borderLine text-xs font-bold text-navy file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#E9F2FF] file:text-primaryBlue cursor-pointer"
                   />
+                </div>
+              </div>
+            )}
+
+            {isUploading && uploadProgress > 0 && (
+              <div className="mt-6 mb-2">
+                <div className="flex justify-between text-xs font-bold text-primaryBlue mb-1.5">
+                  <span>Uploading to Cloud Server...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-secondaryBg rounded-full h-2.5 overflow-hidden">
+                  <div 
+                    className="bg-primaryBlue h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
                 </div>
               </div>
             )}
@@ -825,10 +877,33 @@ const ManageMaterials = () => {
 
           {/* Materials List Table */}
           <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft overflow-x-auto">
-            <h3 className="text-lg font-black text-navy mb-5 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-[#7435D5]" />
-              <span>Published Study Materials & Lectures ({filteredMaterials.length}{filteredMaterials.length !== materials.length ? ` of ${materials.length}` : ''})</span>
-            </h3>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+              <h3 className="text-lg font-black text-navy flex items-center gap-2">
+                <FileText className="w-5 h-5 text-[#7435D5]" />
+                <span>Published Study Materials & Lectures ({filteredMaterials.length}{filteredMaterials.length !== materials.length ? ` of ${materials.length}` : ''})</span>
+              </h3>
+              
+              <div className="flex p-1 bg-secondaryBg rounded-xl border border-borderLine overflow-x-auto">
+                <button
+                  onClick={() => setMatTypeTab('ALL')}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all shrink-0 ${matTypeTab === 'ALL' ? 'bg-white text-navy shadow-sm border border-borderLine' : 'text-muted hover:text-navy'}`}
+                >
+                  All Materials
+                </button>
+                <button
+                  onClick={() => setMatTypeTab('VIDEO')}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all shrink-0 ${matTypeTab === 'VIDEO' ? 'bg-white text-navy shadow-sm border border-borderLine' : 'text-muted hover:text-navy'}`}
+                >
+                  Videos
+                </button>
+                <button
+                  onClick={() => setMatTypeTab('DOC')}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all shrink-0 ${matTypeTab === 'DOC' ? 'bg-white text-navy shadow-sm border border-borderLine' : 'text-muted hover:text-navy'}`}
+                >
+                  Notes & PDFs
+                </button>
+              </div>
+            </div>
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-borderLine text-[11px] font-extrabold text-muted uppercase tracking-wider">
@@ -870,6 +945,13 @@ const ManageMaterials = () => {
                     <td className="py-4 px-4 text-navy font-bold">{m.duration || 'Standard'}</td>
                     <td className="py-4 px-4 text-right">
                       <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => setPreviewMaterial(m)}
+                          className="p-2 rounded-xl bg-secondaryBg hover:bg-white text-navy font-bold text-xs border border-borderLine shadow-xs hover:text-[#7435D5] transition-all"
+                          title="View Material"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => handleEditMat(m)}
                           className="p-2 rounded-xl bg-secondaryBg hover:bg-white text-navy font-bold text-xs border border-borderLine shadow-xs hover:text-primaryBlue transition-all"
@@ -1218,6 +1300,61 @@ const ManageMaterials = () => {
           </div>
         </div>
       )}
+      {/* ======================= MATERIAL PREVIEW MODAL ======================= */}
+      {previewMaterial && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-navy/80 backdrop-blur-sm !mt-0">
+          <div className="relative w-full max-w-7xl h-[95vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-borderLine bg-[#F8FAFC]">
+              <h3 className="text-lg font-black text-navy flex items-center gap-2">
+                {previewMaterial.type === 'VIDEO' ? <Video className="w-5 h-5 text-[#7435D5]" /> : <BookOpen className="w-5 h-5 text-primaryBlue" />}
+                Material Preview: <span className="font-bold text-muted">{previewMaterial.title}</span>
+              </h3>
+              <button 
+                onClick={() => setPreviewMaterial(null)}
+                className="p-2 rounded-xl bg-white hover:bg-[#FFF2F2] text-muted hover:text-[#DC2626] border border-borderLine shadow-sm transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 w-full bg-secondaryBg relative overflow-y-auto">
+              {previewMaterial.type === 'VIDEO' ? (
+                <video 
+                  src={getFileUrl(previewMaterial.videoUrl || previewMaterial.fileUrl)} 
+                  controls 
+                  autoPlay
+                  className="w-full h-full bg-black object-contain"
+                />
+              ) : previewMaterial.type === 'NOTES' ? (
+                <div 
+                  className="p-8 md:p-12 prose max-w-none text-navy bg-white min-h-full"
+                  dangerouslySetInnerHTML={{ __html: previewMaterial.richTextContent || '<p>No content provided.</p>' }}
+                />
+              ) : previewMaterial.type === 'PDF' && previewMaterial.fileUrl ? (
+                previewMaterial.fileUrl.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) ? (
+                  <div className="w-full h-full flex justify-center items-center p-4 bg-white">
+                    <img 
+                      src={getFileUrl(previewMaterial.fileUrl)} 
+                      alt={previewMaterial.title}
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+                    />
+                  </div>
+                ) : (
+                  <iframe 
+                    src={`${getFileUrl(previewMaterial.fileUrl)}#toolbar=0`}
+                    className="absolute inset-0 w-full h-full border-0"
+                    title="Material Preview"
+                  ></iframe>
+                )
+              ) : (
+                <div className="flex items-center justify-center w-full h-full text-muted font-bold">
+                  Preview not available
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

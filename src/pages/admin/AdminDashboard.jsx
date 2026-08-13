@@ -10,23 +10,27 @@ const AdminDashboard = () => {
     staleTime: 30 * 1000,
   });
 
+  if (isLoading) {
+    return (
+      <div className="p-16 text-center font-bold text-navy flex flex-col items-center gap-3">
+        <Activity className="w-10 h-10 text-primaryBlue animate-spin" />
+        <span>Loading Analytics Dashboard...</span>
+      </div>
+    );
+  }
+
   const stats = adminData?.stats || {
-    totalStudents: 142,
-    totalSubjects: 2,
-    totalCategories: 12,
-    totalTopics: 182,
-    totalVideos: 24,
-    totalNotes: 56,
-    totalMCQs: 120,
-    totalResources: 220,
+    totalStudents: 0,
+    totalSubjects: 0,
+    totalCategories: 0,
+    totalTopics: 0,
+    totalVideos: 0,
+    totalNotes: 0,
+    totalMCQs: 0,
+    totalResources: 0,
   };
 
-  const mostCompleted = adminData?.mostCompletedTopics || [
-    { title: 'History of ASD', category: 'Child Psychiatry', completionRate: '96%', studentsCount: 142 },
-    { title: 'Etiology & Genetics', category: 'Child Psychiatry', completionRate: '88%', studentsCount: 118 },
-    { title: 'Clinical Features of ADHD', category: 'Child Psychiatry', completionRate: '84%', studentsCount: 94 },
-    { title: 'Pharmacological Management', category: 'Psychopharmacology', completionRate: '79%', studentsCount: 86 },
-  ];
+  const mostCompleted = adminData?.mostCompletedTopics || [];
 
   return (
     <div className="space-y-8 animate-fadeIn pb-16">
@@ -80,14 +84,22 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-borderLine/50 text-sm font-semibold text-navy">
-              {mostCompleted.map((t, idx) => (
-                <tr key={idx} className="hover:bg-secondaryBg/80 transition-colors">
-                  <td className="py-4 px-4 font-black">{t.title}</td>
-                  <td className="py-4 px-4 text-muted">{t.category}</td>
-                  <td className="py-4 px-4 text-primaryBlue font-bold">{t.studentsCount} residents</td>
-                  <td className="py-4 px-4 font-bold text-medicalGreen">{t.completionRate}</td>
+              {mostCompleted.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="py-8 px-4 text-center text-muted font-medium">
+                    No completion data available yet.
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                mostCompleted.map((t, idx) => (
+                  <tr key={idx} className="hover:bg-secondaryBg/80 transition-colors">
+                    <td className="py-4 px-4 font-black">{t.title}</td>
+                    <td className="py-4 px-4 text-muted">{t.category}</td>
+                    <td className="py-4 px-4 text-primaryBlue font-bold">{t.studentsCount} residents</td>
+                    <td className="py-4 px-4 font-bold text-medicalGreen">{t.completionRate}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

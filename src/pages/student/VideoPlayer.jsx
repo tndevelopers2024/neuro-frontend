@@ -38,14 +38,8 @@ const VideoPlayer = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  const material = resData?.material || {
-    title: 'Evolution of ASD Concepts (Kanner & Asperger)',
-    description: 'HD Lecture Video reviewing 1943 diagnostic paradigms and DSM revisions.',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    topic: { title: 'History of ASD', slug: 'history-of-asd', _id: '64aaaaa00000000000000001' },
-  };
-
-  const ytVideoId = extractYouTubeId(material.videoUrl);
+  const material = resData?.material;
+  const ytVideoId = extractYouTubeId(material?.videoUrl);
 
   // Load saved timestamp from server and localStorage
   useEffect(() => {
@@ -94,14 +88,14 @@ const VideoPlayer = () => {
       }
       if (forceCompleted) pct = 100;
 
-      if (pct >= 90 && progress < 90) {
-        toast.success('🏆 Video lesson mastered! Your progress percentage has escalated!', { icon: '✨', duration: 4000 });
+      if (pct >= 90 && progress < 99) {
+        toast.success('Video lesson mastered! Your progress percentage has escalated!', { icon: '✨', duration: 4000 });
       }
 
       try {
         await api.post('/progress/update', {
-          topicId: material.topic?._id || '64aaaaa00000000000000001',
-          materialId: material._id || id,
+          topicId: material?.topic?._id || material?.topic,
+          materialId: material?._id || id,
           materialType: 'VIDEO',
           progressPercentage: pct >= 90 ? 100 : pct,
           lastPosition: current,
@@ -204,10 +198,10 @@ const VideoPlayer = () => {
     setIsSavingNote(true);
     try {
       await api.post('/user/notes', {
-        title: `Video Note: ${material.topic?.title || material.title}`,
+        title: `Video Note: ${material?.topic?.title || material?.title}`,
         content: noteText,
-        relatedTopic: material.topic?._id || id,
-        topicTitle: material.topic?.title || 'Video Lecture',
+        relatedTopic: material?.topic?._id || id,
+        topicTitle: material?.topic?.title || 'Video Lecture',
       });
       toast.success('Private study note saved to your personal vault!');
       setNoteText('');
@@ -251,8 +245,10 @@ const VideoPlayer = () => {
             ) : (
               <video
                 ref={videoRef}
-                src={material.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
+                src={material?.videoUrl}
                 controls
+                controlsList="nodownload"
+                onContextMenu={(e) => e.preventDefault()}
                 onTimeUpdate={() => syncPositionNow()}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
@@ -262,14 +258,30 @@ const VideoPlayer = () => {
           </div>
 
           {resumedTime > 3 && (
-            <div className="flex items-center justify-between bg-gradient-to-r from-primaryBlue/10 via-purple-500/10 to-transparent p-4 rounded-2xl border border-primaryBlue/20 text-xs font-bold text-navy">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-primaryBlue/10 via-purple-500/10 to-transparent p-4 rounded-2xl border border-primaryBlue/20 text-xs font-bold text-navy">
               <span className="flex items-center gap-2 text-primaryBlue">
                 <Clock className="w-4 h-4 text-purple-600 animate-pulse" />
                 <span>In-App Resume Active: Your playback timestamp is continuously preserved.</span>
               </span>
-              <span className="bg-white px-3 py-1 rounded-xl shadow-xs text-navy font-black border border-borderLine">
-                Last Saved Position: {formatTime(resumedTime)}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="bg-white px-3 py-1.5 rounded-xl shadow-xs text-navy font-black border border-borderLine">
+                  Last Saved Position: {formatTime(resumedTime)}
+                </span>
+                {!ytVideoId && (
+                  <button 
+                    onClick={() => {
+                      if (videoRef.current) {
+                        videoRef.current.currentTime = resumedTime;
+                        videoRef.current.play();
+                      }
+                    }}
+                    className="flex items-center gap-1.5 bg-[#7435D5] text-white px-4 py-1.5 rounded-xl font-extrabold hover:bg-[#5E25B2] transition-colors shadow-md"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    Resume
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -277,7 +289,7 @@ const VideoPlayer = () => {
             <div className="flex items-center justify-between mb-3">
               <h1 className="text-xl md:text-2xl font-black text-navy flex items-center gap-2.5">
                 {ytVideoId ? <Video className="w-6 h-6 text-red-600 shrink-0" /> : null}
-                <span>{material.title}</span>
+                <span>{material?.title}</span>
               </h1>
               {progress >= 90 ? (
                 <span className="flex items-center gap-1 bg-[#EAF7ED] text-medicalGreen font-bold text-xs px-3 py-1.5 rounded-full shadow-xs">
@@ -290,7 +302,7 @@ const VideoPlayer = () => {
               )}
             </div>
             <p className="text-sm font-medium text-muted leading-relaxed">
-              {material.description || 'Watch HD clinical psychiatry lectures detailing evolution of diagnostic paradigms from Leo Kanner (1943) to DSM-5 TR.'}
+              {material?.description}
             </p>
           </div>
         </div>

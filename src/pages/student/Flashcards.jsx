@@ -62,6 +62,25 @@ const Flashcards = () => {
     );
   }
 
+  if (!flashcards || flashcards.length === 0) {
+    return (
+      <div className="space-y-6 animate-fadeIn pb-16 max-w-3xl mx-auto">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-sm font-extrabold text-primaryBlue hover:underline"
+          >
+            <ArrowLeft className="w-4 h-4" /> Return to Curriculum
+          </button>
+        </div>
+        <div className="p-16 text-center font-bold text-navy flex flex-col items-center gap-3 bg-white border border-borderLine rounded-3xl shadow-soft">
+          <Layers className="w-10 h-10 text-muted" />
+          <span>No flashcards available for this topic yet.</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fadeIn pb-16 max-w-3xl mx-auto">
       <div className="flex items-center justify-between">

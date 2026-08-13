@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { LayoutDashboard, Flame, Award, Clock, ArrowRight, Brain, FileText, Bookmark as BookmarkIcon, CheckCircle2, PlayCircle, Layers } from 'lucide-react';
+import { LayoutDashboard, Flame, Award, Clock, ArrowRight, Brain, FileText, Bookmark as BookmarkIcon, CheckCircle2, PlayCircle, Layers, Globe, Map } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
@@ -17,20 +17,16 @@ const Dashboard = () => {
   });
 
   const stats = statsData?.stats || {
-    progressPercentage: 68,
-    topicsExplored: 124,
-    totalTopics: 182,
-    notesCreated: 36,
-    flashcardsAvailable: 220,
-    quizzesTaken: 18,
-    studyStreak: 7,
+    progressPercentage: 0,
+    topicsExplored: 0,
+    totalTopics: 0,
+    notesCreated: 0,
+    flashcardsAvailable: 0,
+    quizzesTaken: 0,
+    studyStreak: user?.studyStreak || 0,
   };
 
-  const activityList = statsData?.recentActivity || [
-    { title: 'History of ASD', subtitle: 'Viewed 10 minutes ago • Child Psychiatry', link: '/lesson/history-of-asd', type: 'Video' },
-    { title: 'Autism Spectrum Disorder (ASD) Branch Map', subtitle: 'Viewed 1 hour ago • Neurodevelopmental Disorders', link: '/topic/autism-spectrum-disorder', type: 'Topic' },
-    { title: 'Child Psychiatry Knowledge Domain', subtitle: 'Viewed yesterday • Psychiatry Core', link: '/learn/psychiatry/child-psychiatry', type: 'Topic' },
-  ];
+  const activityList = statsData?.recentActivity || [];
 
   return (
     <div className="space-y-8 animate-fadeIn pb-16 max-w-7xl mx-auto">
@@ -55,7 +51,7 @@ const Dashboard = () => {
         <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/20 shrink-0 relative z-10">
           <Flame className="w-10 h-10 text-[#FFB020] animate-bounce" />
           <div>
-            <div className="text-2xl font-black text-white">{stats.studyStreak || 7} Days</div>
+            <div className="text-2xl font-black text-white">{stats.studyStreak || 0} Days</div>
             <div className="text-xs font-bold text-white/70 uppercase">Active Study Streak</div>
           </div>
         </div>
@@ -147,17 +143,27 @@ const Dashboard = () => {
               <Brain className="w-5 h-5 text-cyan" /> Curriculum Shortcuts
             </h3>
             <div className="space-y-3">
-              <Link to="/learn/psychiatry/child-psychiatry" className="block p-4 rounded-2xl bg-[#EAF7FD] border border-cyan/20 font-bold text-sm text-cyan hover:bg-cyan hover:text-white transition-all shadow-xs">
-                🧒 Open Child Psychiatry Orbit
-              </Link>
-              <Link to="/topic/autism-spectrum-disorder" className="block p-4 rounded-2xl bg-[#E9F2FF] border border-primaryBlue/20 font-bold text-sm text-primaryBlue hover:bg-primaryBlue hover:text-white transition-all shadow-xs">
-                🧩 Autism Spectrum Disorder Map (Screen 3)
-              </Link>
-              <Link to="/lesson/history-of-asd" className="block p-4 rounded-2xl bg-[#F5EEFE] border border-medicalPurple/20 font-bold text-sm text-medicalPurple hover:bg-medicalPurple hover:text-white transition-all shadow-xs">
-                🎬 Watch History of ASD Video & Notes (Screen 4)
-              </Link>
-              <Link to="/my-notes" className="block p-4 rounded-2xl bg-secondaryBg border border-borderLine font-bold text-sm text-navy hover:bg-white transition-all shadow-xs">
-                📖 My Resident Study Vault ({stats.notesCreated} Notes)
+              {statsData?.recommendedShortcuts?.orbit && (
+                <Link to={statsData.recommendedShortcuts.orbit.link} className="flex items-center gap-3 p-4 rounded-2xl bg-[#EAF7FD] border border-cyan/20 font-bold text-sm text-cyan hover:bg-cyan hover:text-white transition-all shadow-xs group">
+                  <Globe className="w-5 h-5 shrink-0 group-hover:text-white" /> 
+                  <span>Open {statsData.recommendedShortcuts.orbit.title} Orbit</span>
+                </Link>
+              )}
+              {statsData?.recommendedShortcuts?.map && (
+                <Link to={statsData.recommendedShortcuts.map.link} className="flex items-center gap-3 p-4 rounded-2xl bg-[#E9F2FF] border border-primaryBlue/20 font-bold text-sm text-primaryBlue hover:bg-primaryBlue hover:text-white transition-all shadow-xs group">
+                  <Map className="w-5 h-5 shrink-0 group-hover:text-white" /> 
+                  <span>{statsData.recommendedShortcuts.map.title} Map</span>
+                </Link>
+              )}
+              {statsData?.recommendedShortcuts?.video && (
+                <Link to={statsData.recommendedShortcuts.video.link} className="flex items-center gap-3 p-4 rounded-2xl bg-[#F5EEFE] border border-medicalPurple/20 font-bold text-sm text-medicalPurple hover:bg-medicalPurple hover:text-white transition-all shadow-xs group">
+                  <PlayCircle className="w-5 h-5 shrink-0 group-hover:text-white" /> 
+                  <span>Watch {statsData.recommendedShortcuts.video.title} Video & Notes</span>
+                </Link>
+              )}
+              <Link to="/my-notes" className="flex items-center gap-3 p-4 rounded-2xl bg-secondaryBg border border-borderLine font-bold text-sm text-navy hover:bg-white transition-all shadow-xs group">
+                <FileText className="w-5 h-5 shrink-0 text-primaryBlue" /> 
+                <span>My Resident Study Vault ({stats.notesCreated} Notes)</span>
               </Link>
             </div>
           </div>

@@ -44,6 +44,10 @@ const LessonMaterials = () => {
   }];
   const videoMaterial = videoMaterials[0];
 
+  const avgVideoProgress = uploadedVideos.length > 0
+    ? Math.round(uploadedVideos.reduce((sum, v) => sum + (v.progressPercentage || 0), 0) / uploadedVideos.length)
+    : 0;
+
   const uploadedNotes = materials.filter((m) => m.type === 'NOTES' || m.type === 'PDF');
   const noteMaterials = uploadedNotes.length > 0 ? uploadedNotes : [{
     _id: '64aaaaa00000000000000002',
@@ -145,22 +149,39 @@ const LessonMaterials = () => {
             </p>
           </div>
 
-          <div className="mt-8 pt-5 border-t border-borderLine/70 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#7435D5] bg-[#7435D5]/10 px-3 py-1 rounded-full">
-              {videoMaterials.length > 1 ? (
-                <>
-                  <Layers className="w-3.5 h-3.5" /> {videoMaterials.length} Videos Available
-                </>
-              ) : (
-                <>
-                  <Clock className="w-3.5 h-3.5" /> {videoMaterial?.duration || '24 min'}
-                </>
-              )}
-            </span>
-            <div className="flex items-center gap-1.5 font-extrabold text-xs text-[#7435D5] group-hover:underline">
-              <span>{videoMaterials.length > 1 ? 'View Video Playlist' : 'Launch Video Player'}</span>
-              <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+          <div className="mt-8 pt-5 border-t border-borderLine/70 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#7435D5] bg-[#7435D5]/10 px-3 py-1 rounded-full">
+                {videoMaterials.length > 1 ? (
+                  <>
+                    <Layers className="w-3.5 h-3.5" /> {videoMaterials.length} Videos Available
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-3.5 h-3.5" /> {videoMaterial?.duration || '24 min'}
+                  </>
+                )}
+              </span>
+              <div className="flex items-center gap-1.5 font-extrabold text-xs text-[#7435D5] group-hover:underline">
+                <span>{videoMaterials.length > 1 ? 'View Video Playlist' : 'Launch Video Player'}</span>
+                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
+            
+            {uploadedVideos.length > 0 && (
+              <div className="w-full">
+                <div className="flex justify-between text-[10px] font-extrabold text-[#7435D5]/80 uppercase tracking-wider mb-1.5">
+                  <span>Overall Progress</span>
+                  <span>{avgVideoProgress}%</span>
+                </div>
+                <div className="w-full bg-[#7435D5]/10 rounded-full h-1.5 overflow-hidden">
+                  <div 
+                    className="bg-[#7435D5] h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${avgVideoProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

@@ -6,7 +6,7 @@ import api from '../../api/axiosInstance.js';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
 
 const MaterialPlaylist = () => {
-  const { type = 'video', topicSlug = 'history-of-asd' } = useParams();
+  const { type, topicSlug } = useParams();
   const navigate = useNavigate();
 
   // Fetch all topic materials
@@ -14,16 +14,17 @@ const MaterialPlaylist = () => {
     queryKey: ['topicMaterials', topicSlug],
     queryFn: () => api.get(`/materials/topic/${topicSlug}`),
     staleTime: 5 * 60 * 1000,
+    enabled: !!topicSlug,
   });
 
   const isVideo = type === 'video' || type === 'videos';
 
   const formattedTitle = useMemo(() => {
+    if (!topicSlug) return '';
     return topicSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }, [topicSlug]);
 
   const topic = materialData?.topic || {
-    _id: '64bb1234567890123456789a',
     title: formattedTitle,
     description: `Comprehensive clinical study modules and lecture materials on ${formattedTitle}.`,
   };
@@ -33,24 +34,11 @@ const MaterialPlaylist = () => {
   // Filter based on requested media type
   const filteredMaterials = useMemo(() => {
     if (isVideo) {
-      const videos = allMaterials.filter(m => m.type === 'VIDEO');
-      return videos.length > 0 ? videos : [{
-        _id: '64aaaaa00000000000000001',
-        title: `${topic.title} - HD Video Lecture`,
-        duration: '24 min',
-        description: `Detailed board-review video analysis of ${topic.title} covering neurodevelopmental concepts, diagnostic assessment, and clinical protocols.`,
-        type: 'VIDEO',
-      }];
+      return allMaterials.filter(m => m.type === 'VIDEO');
     } else {
-      const notes = allMaterials.filter(m => m.type === 'NOTES' || m.type === 'PDF');
-      return notes.length > 0 ? notes : [{
-        _id: '64aaaaa00000000000000002',
-        title: `${topic.title} - High-Yield Study Notes`,
-        description: `High-yield structured reading notes synthesizing key diagnostic criteria, epidemiological parameters, and clinical practice pearls for ${topic.title}.`,
-        type: 'PDF',
-      }];
+      return allMaterials.filter(m => m.type === 'NOTES' || m.type === 'PDF' || m.type === 'DOCUMENT');
     }
-  }, [allMaterials, isVideo, topic.title]);
+  }, [allMaterials, isVideo]);
 
   const breadcrumbs = [
     { title: 'Home', link: '/' },
@@ -93,9 +81,9 @@ const MaterialPlaylist = () => {
             {topic.title} - {isVideo ? 'Video Playlist' : 'Study Documents'}
           </h1>
           <p className="text-sm md:text-base font-medium text-muted leading-relaxed">
-            {isVideo 
+            {topic.description || (isVideo 
               ? 'Explore all uploaded lecture videos, anatomical demonstrations, and clinical case presentations associated with this topic branch. Choose any lecture below to start streaming.' 
-              : 'Access comprehensive study guidelines, lecture transcripts, diagnostic comparison diagrams, and high-yield reading notes for this medical module.'}
+              : 'Access comprehensive study guidelines, lecture transcripts, diagnostic comparison diagrams, and high-yield reading notes for this medical module.')}
           </p>
         </div>
 
@@ -118,7 +106,11 @@ const MaterialPlaylist = () => {
         </h2>
 
         <div className="space-y-4">
-          {filteredMaterials.map((item, idx) => (
+          {filteredMaterials.length === 0 ? (
+            <div className="bg-white border border-borderLine rounded-2xl p-8 text-center shadow-soft">
+              <p className="text-muted font-medium">No {isVideo ? 'video lectures' : 'study documents'} available for this topic yet.</p>
+            </div>
+          ) : filteredMaterials.map((item, idx) => (
             <div
               key={item._id || idx}
               onClick={() => navigate(isVideo ? `/video/${item._id}` : `/notes/${item._id}`)}
@@ -141,8 +133,8 @@ const MaterialPlaylist = () => {
                     <span className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-md ${
                       isVideo ? 'text-[#7435D5] bg-[#7435D5]/10' : 'text-primaryBlue bg-[#E9F2FF]'
                     }`}>
-                      {isVideo ? <Clock className="w-3 h-3" /> : <Download className="w-3 h-3" />}
-                      {isVideo ? (item.duration || '24 min video') : (item.type || 'PDF Document')}
+                      {isVideo ? <Clock className="w-3 h-3" /> : <></>}
+                      {isVideo ? (item.duration || 'Unknown duration') : (item.type || 'Document')}
                     </span>
                     {isVideo && item.videoUrl && item.videoUrl.includes('youtube') && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#E62E2E] bg-[#E62E2E]/10 px-2.5 py-0.5 rounded-md">
@@ -154,12 +146,26 @@ const MaterialPlaylist = () => {
                   <h3 className={`text-lg sm:text-xl font-black text-navy transition-colors ${
                     isVideo ? 'group-hover:text-[#7435D5]' : 'group-hover:text-primaryBlue'
                   }`}>
-                    {item.title || `${isVideo ? 'Video Lecture' : 'Study Notes'} Part ${idx + 1}`}
+                    {item.title}
                   </h3>
 
                   <p className="text-xs sm:text-sm font-medium text-muted leading-relaxed max-w-3xl line-clamp-2">
-                    {item.description || (isVideo ? 'Watch high-definition visual audio lecture covering diagnostic revisions, timeline tables, and clinical pearls.' : 'Read structured synthesis notes complete with clinical case summaries and board review comparisons.')}
+                    {item.description || 'No description available for this material.'}
                   </p>
+
+                  {isVideo && item.progressPercentage !== undefined && (
+                    <div className="mt-4 max-w-md">
+                      <div className="flex justify-between text-[10px] font-extrabold text-muted uppercase tracking-wider mb-1.5">
+                        <span>{item.progressPercentage === 100 ? 'Completed' : `${item.progressPercentage}% Completed`}</span>
+                      </div>
+                      <div className="w-full bg-secondaryBg border border-borderLine rounded-full h-2 overflow-hidden shadow-inner">
+                        <div 
+                          className={`${isVideo ? 'bg-[#7435D5]' : 'bg-primaryBlue'} h-2 rounded-full transition-all duration-500`}
+                          style={{ width: `${item.progressPercentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

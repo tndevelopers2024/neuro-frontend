@@ -35,7 +35,7 @@ const Bookmarks = () => {
   const filtered = bookmarks.filter((b) => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-16 max-w-6xl mx-auto">
+    <div className="space-y-6 animate-fadeIn pb-16 max-w-7xl mx-auto">
       <Breadcrumb items={[{ title: 'Home', link: '/' }, { title: 'Personal Bookmarks & Favorites' }]} />
 
       <div className="bg-white border border-borderLine rounded-3xl p-7 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">

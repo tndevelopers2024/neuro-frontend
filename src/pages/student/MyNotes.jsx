@@ -51,7 +51,7 @@ const MyNotes = () => {
   const filteredNotes = notes.filter(n => n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-16 max-w-6xl mx-auto">
+    <div className="space-y-6 animate-fadeIn pb-16 max-w-7xl mx-auto">
       <Breadcrumb items={[{ title: 'Home', link: '/' }, { title: 'Personal Study Notes Vault' }]} />
 
       <div className="bg-white border border-borderLine rounded-3xl p-7 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
