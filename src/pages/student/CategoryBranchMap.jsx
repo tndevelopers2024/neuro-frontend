@@ -105,7 +105,7 @@ const CategoryBranchMap = () => {
 
   if (isLoading && !categoryData) {
     return (
-      <div className="p-16 text-center font-extrabold text-navy flex flex-col items-center gap-4">
+      <div className="p-8 text-center font-semibold text-navy flex flex-col items-center gap-4">
         <Brain className="w-12 h-12 text-cyan animate-bounce" />
         <span className="text-lg">Loading Complete Medical Branch Tree...</span>
       </div>
@@ -124,7 +124,7 @@ const CategoryBranchMap = () => {
         />
         <Link
           to="/"
-          className="flex items-center gap-2 text-xs font-extrabold text-navy hover:text-primaryBlue bg-white px-4 py-2 rounded-2xl border border-borderLine shadow-sm hover:shadow-md transition-all"
+          className="flex items-center gap-2 text-xs font-semibold text-navy hover:text-primaryBlue bg-white px-4 py-2 rounded-lg border border-borderLine shadow-sm hover:shadow-md transition-all"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Domain Orbits</span>
@@ -132,17 +132,17 @@ const CategoryBranchMap = () => {
       </div>
 
       {/* Hero Banner */}
-      <div className="bg-white border border-borderLine rounded-3xl p-6 lg:p-8 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-white border border-borderLine rounded-xl p-6 lg:p-8 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-2">
             <span
               style={{ backgroundColor: `${activeCatObj.color}15`, color: activeCatObj.color }}
-              className="text-[11px] font-extrabold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5"
+              className="text-[11px] font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5"
             >
               <Sparkles className="w-3.5 h-3.5" /> Domain Focus: {activeCatObj.name}
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-navy tracking-tight mt-2.5">
+          <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight mt-2.5">
             {activeCatObj.name} Subtopics & Clinical Modules
           </h1>
           <p className="text-sm font-medium text-muted mt-1 max-w-3xl">
@@ -151,10 +151,10 @@ const CategoryBranchMap = () => {
         </div>
 
         {/* View Switcher */}
-        <div className="flex items-center gap-2 bg-secondaryBg p-1.5 rounded-2xl border border-borderLine self-stretch md:self-auto justify-center">
+        <div className="flex items-center gap-2 bg-secondaryBg p-1.5 rounded-lg border border-borderLine self-stretch md:self-auto justify-center">
           <button
             onClick={() => setViewMode('GRID_EXPANDS')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
               viewMode === 'GRID_EXPANDS' ? 'bg-primaryBlue text-white shadow-md' : 'text-muted hover:text-navy'
             }`}
           >
@@ -163,7 +163,7 @@ const CategoryBranchMap = () => {
           </button>
           <button
             onClick={() => setViewMode('RADIAL_MAP')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
               viewMode === 'RADIAL_MAP' ? 'bg-primaryBlue text-white shadow-md' : 'text-muted hover:text-navy'
             }`}
           >
@@ -195,7 +195,7 @@ const CategoryBranchMap = () => {
                 key={sIndex}
                 onClick={() => navigate(`/topic/${targetSlug}`)}
                 style={{ borderColor: `${activeCatObj.color}50`, borderWidth: '2px' }}
-                className="bg-white rounded-3xl p-6 shadow-soft hover:shadow-elevated hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden"
+                className="bg-white rounded-xl p-6 shadow-soft hover:shadow-elevated hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden"
               >
                 <div 
                   style={{ backgroundColor: `${activeCatObj.color}08` }} 
@@ -205,20 +205,20 @@ const CategoryBranchMap = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div
                       style={{ backgroundColor: `${activeCatObj.color}15`, color: activeCatObj.color }}
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center border border-current/20 group-hover:scale-110 transition-transform shadow-sm"
+                      className="w-12 h-12 rounded-lg flex items-center justify-center border border-current/20 group-hover:scale-110 transition-transform shadow-sm"
                     >
                       <IconComp className="w-6 h-6" />
                     </div>
                     <span
                       style={{ backgroundColor: `${activeCatObj.color}15`, color: activeCatObj.color }}
-                      className="text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5"
+                      className="text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5"
                     >
                       <span style={{ backgroundColor: activeCatObj.color }} className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" />
                       Module {sIndex + 1}
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-black text-navy tracking-tight group-hover:text-primaryBlue transition-colors line-clamp-2">
+                  <h3 className="text-lg font-bold text-navy tracking-tight group-hover:text-primaryBlue transition-colors line-clamp-2">
                     {sub.title}
                   </h3>
                   <p className="text-xs font-semibold text-muted mt-2.5 leading-relaxed">

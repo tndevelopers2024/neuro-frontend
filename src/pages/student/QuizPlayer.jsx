@@ -20,42 +20,8 @@ const QuizPlayer = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const topic = quizData?.topic || { title: 'History of ASD', _id: '64bbbb100000000000000001' };
-  const mcqs = quizData?.mcqs || [
-    {
-      _id: '1',
-      question: 'Who originally coined the term "autism" in the psychiatric literature in 1911?',
-      optionA: 'Leo Kanner',
-      optionB: 'Hans Asperger',
-      optionC: 'Eugen Bleuler',
-      optionD: 'Sigmund Freud',
-      correctAnswer: 'C',
-      explanation: 'Eugen Bleuler first introduced the term in 1911 to delineate social withdrawal observed in schizophrenic patients.',
-      difficulty: 'Easy',
-    },
-    {
-      _id: '2',
-      question: 'Which edition of the Diagnostic and Statistical Manual (DSM) first separated Autism from Childhood Schizophrenia?',
-      optionA: 'DSM-I (1952)',
-      optionB: 'DSM-II (1968)',
-      optionC: 'DSM-III (1980)',
-      optionD: 'DSM-IV (1994)',
-      correctAnswer: 'C',
-      explanation: 'DSM-III (1980) was a major paradigm shift that formally distinguished autism from schizophrenia spectra under PDD.',
-      difficulty: 'Medium',
-    },
-    {
-      _id: '3',
-      question: 'Which clinical feature best differentiates Hans Asperger’s original 1944 description from Leo Kanner’s 1943 cohort?',
-      optionA: 'Complete absence of repetitive behaviors',
-      optionB: 'Preserved cognitive function and verbal grammatical vocabulary',
-      optionC: 'Onset in late adulthood after age 30',
-      optionD: 'Exclusive association with temporal lobe epilepsy',
-      correctAnswer: 'B',
-      explanation: 'Hans Asperger described children with remarkably sophisticated grammar and normal-to-superior intellectual ability.',
-      difficulty: 'Clinical Case',
-    },
-  ];
+  const topic = quizData?.topic || {};
+  const mcqs = quizData?.mcqs || [];
 
   const handleOptionSelect = (optLetter) => {
     if (isSubmitted) return;
@@ -75,7 +41,7 @@ const QuizPlayer = () => {
 
     try {
       await api.post('/quiz/submit', {
-        topicId: topic._id || '64bbbb100000000000000001',
+        topicId: topic._id,
         totalQuestions: mcqs.length,
         correctAnswers: correctCount,
         timeTakenSeconds: 120,
@@ -95,27 +61,38 @@ const QuizPlayer = () => {
 
   if (isLoading) {
     return (
-      <div className="p-16 text-center font-bold text-navy flex flex-col items-center gap-3">
+      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
         <Sparkles className="w-10 h-10 text-medicalGreen animate-spin" />
         <span>Loading Clinical Board Quizzes...</span>
       </div>
     );
   }
 
-  const currentQ = mcqs[currentIdx] || mcqs[0];
+  if (!mcqs || mcqs.length === 0) {
+    return (
+      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
+        <span>No questions found for this quiz.</span>
+        <button onClick={() => navigate(-1)} className="text-primaryBlue hover:underline mt-2 flex items-center gap-2">
+          <ArrowLeft className="w-4 h-4" /> Go Back
+        </button>
+      </div>
+    );
+  }
+
+  const currentQ = mcqs[currentIdx];
 
   return (
     <div className="space-y-6 animate-fadeIn pb-16 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm font-extrabold text-primaryBlue hover:underline"
+          className="flex items-center gap-2 text-sm font-semibold text-primaryBlue hover:underline"
         >
           <ArrowLeft className="w-4 h-4" /> Exit Quiz Module
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="bg-[#EAF7ED] text-medicalGreen text-xs font-extrabold px-3.5 py-1 rounded-full uppercase tracking-wider">
+          <span className="bg-[#EAF7ED] text-medicalGreen text-xs font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider">
             {currentQ.difficulty || 'Clinical Vignette'}
           </span>
           <span className="bg-secondaryBg text-navy text-xs font-bold px-3 py-1 rounded-full border border-borderLine">
@@ -125,13 +102,13 @@ const QuizPlayer = () => {
       </div>
 
       {/* Main Quiz Board Card */}
-      <div className="bg-white border border-borderLine rounded-3xl p-8 md:p-10 shadow-soft relative overflow-hidden">
+      <div className="bg-white border border-borderLine rounded-xl p-8 md:p-10 shadow-soft relative overflow-hidden">
         {isSubmitted && (
-          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-[#F8FAFF] to-[#EAF7ED] border border-borderLine flex items-center justify-between">
+          <div className="mb-8 p-6 rounded-lg bg-gradient-to-r from-[#F8FAFF] to-[#EAF7ED] border border-borderLine flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Award className="w-12 h-12 text-medicalGreen shrink-0" />
               <div>
-                <h3 className="text-lg font-extrabold text-navy">Assessment Complete! Final Score: {score}%</h3>
+                <h3 className="text-lg font-semibold text-navy">Assessment Complete! Final Score: {score}%</h3>
                 <p className="text-xs font-medium text-muted">Review the correct board explanations highlighted in green below.</p>
               </div>
             </div>
@@ -141,7 +118,7 @@ const QuizPlayer = () => {
           </div>
         )}
 
-        <h2 className="text-xl md:text-2xl font-black text-navy tracking-tight leading-relaxed mb-8">
+        <h2 className="text-xl md:text-2xl font-bold text-navy tracking-tight leading-relaxed mb-8">
           {currentQ.question}
         </h2>
 
@@ -172,10 +149,10 @@ const QuizPlayer = () => {
               <div
                 key={letter}
                 onClick={() => handleOptionSelect(letter)}
-                className={`p-5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${cardStyle}`}
+                className={`p-5 rounded-lg border flex items-center justify-between cursor-pointer transition-all ${cardStyle}`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black border ${
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold border ${
                     isSelected ? 'bg-current text-white border-transparent' : 'bg-white border-borderLine text-navy'
                   }`}>
                     {letter}
@@ -191,8 +168,8 @@ const QuizPlayer = () => {
 
         {/* Clinical Rationale Explanation Block */}
         {isSubmitted && currentQ.explanation && (
-          <div className="mt-8 p-6 rounded-2xl bg-[#F8FAFF] border-l-4 border-l-primaryBlue border border-borderLine animate-fadeIn">
-            <h4 className="text-sm font-extrabold text-navy uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+          <div className="mt-8 p-6 rounded-lg bg-[#F8FAFF] border-l-4 border-l-primaryBlue border border-borderLine animate-fadeIn">
+            <h4 className="text-sm font-semibold text-navy uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <HelpCircle className="w-4 h-4 text-primaryBlue" /> Clinical Board Rationale
             </h4>
             <p className="text-sm font-medium text-muted leading-relaxed m-0">{currentQ.explanation}</p>
@@ -211,7 +188,7 @@ const QuizPlayer = () => {
 
           <div className="flex items-center gap-3">
             {!isSubmitted && currentIdx === mcqs.length - 1 && (
-              <button onClick={handleFinalSubmit} className="bg-medicalGreen hover:bg-[#1C8D3C] text-white font-extrabold px-8 py-3 rounded-xl shadow-md transition-all">
+              <button onClick={handleFinalSubmit} className="bg-medicalGreen hover:bg-[#1C8D3C] text-white font-semibold px-8 py-3 rounded-xl shadow-md transition-all">
                 Submit & Grade Quiz 🎯
               </button>
             )}

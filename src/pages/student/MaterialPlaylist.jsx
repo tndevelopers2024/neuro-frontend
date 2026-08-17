@@ -49,7 +49,7 @@ const MaterialPlaylist = () => {
 
   if (isLoading && !materialData) {
     return (
-      <div className="p-16 text-center font-bold text-navy flex flex-col items-center gap-3">
+      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
         <Clock className="w-10 h-10 text-primaryBlue animate-spin" />
         <span>Loading {isVideo ? 'Video Lectures' : 'Study Notes'} for {topic.title}...</span>
       </div>
@@ -61,30 +61,25 @@ const MaterialPlaylist = () => {
       <Breadcrumb items={breadcrumbs} />
 
       {/* Hero Header */}
-      <div className={`bg-white border border-borderLine border-t-[8px] ${isVideo ? 'border-t-[#7435D5]' : 'border-t-primaryBlue'} rounded-3xl p-7 lg:p-9 shadow-soft relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6`}>
+      <div className={`bg-white border border-borderLine border-t-[8px] ${isVideo ? 'border-t-[#7435D5]' : 'border-t-primaryBlue'} rounded-xl p-7 lg:p-9 shadow-soft relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6`}>
         <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#7435D5]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
 
         <div className="relative z-10 space-y-3 max-w-3xl">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className={`text-xs font-extrabold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs ${
+            <span className={`text-xs font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs ${
               isVideo ? 'bg-[#7435D5]/15 text-[#7435D5]' : 'bg-[#E9F2FF] text-primaryBlue'
             }`}>
               {isVideo ? <Video className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
               {isVideo ? 'HD Video Lectures Playlist' : 'Clinical Documents Library'}
             </span>
-            <span className="bg-[#EAF7ED] text-medicalGreen text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+            <span className="bg-[#EAF7ED] text-medicalGreen text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> {filteredMaterials.length} {isVideo ? (filteredMaterials.length === 1 ? 'Lecture Available' : 'Lectures Available') : (filteredMaterials.length === 1 ? 'Document Available' : 'Documents Available')}
             </span>
           </div>
           
-          <h1 className="text-2xl md:text-4xl font-black text-navy tracking-tight">
+          <h1 className="text-2xl md:text-4xl font-bold text-navy tracking-tight">
             {topic.title} - {isVideo ? 'Video Playlist' : 'Study Documents'}
           </h1>
-          <p className="text-sm md:text-base font-medium text-muted leading-relaxed">
-            {topic.description || (isVideo 
-              ? 'Explore all uploaded lecture videos, anatomical demonstrations, and clinical case presentations associated with this topic branch. Choose any lecture below to start streaming.' 
-              : 'Access comprehensive study guidelines, lecture transcripts, diagnostic comparison diagrams, and high-yield reading notes for this medical module.')}
-          </p>
         </div>
 
         <div className="relative z-10 shrink-0">
@@ -100,24 +95,24 @@ const MaterialPlaylist = () => {
 
       {/* Playlist Grid / List */}
       <div className="space-y-4">
-        <h2 className="text-sm font-extrabold text-muted uppercase tracking-wider px-2 flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider px-2 flex items-center gap-2">
           <Layers className="w-4 h-4 text-primaryBlue" />
           <span>Available {isVideo ? 'Video Lectures' : 'Study Materials'}</span>
         </h2>
 
         <div className="space-y-4">
           {filteredMaterials.length === 0 ? (
-            <div className="bg-white border border-borderLine rounded-2xl p-8 text-center shadow-soft">
+            <div className="bg-white border border-borderLine rounded-lg p-8 text-center shadow-soft">
               <p className="text-muted font-medium">No {isVideo ? 'video lectures' : 'study documents'} available for this topic yet.</p>
             </div>
           ) : filteredMaterials.map((item, idx) => (
             <div
               key={item._id || idx}
               onClick={() => navigate(isVideo ? `/video/${item._id}` : `/notes/${item._id}`)}
-              className="bg-white border border-borderLine hover:border-transparent rounded-2xl p-6 sm:p-7 shadow-soft hover:shadow-elevated transition-all duration-300 transform hover:-translate-y-1 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-6 group"
+              className="bg-white border border-borderLine hover:border-transparent rounded-lg p-6 sm:p-7 shadow-soft hover:shadow-elevated transition-all duration-300 transform hover:-translate-y-1 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-6 group"
             >
               <div className="flex items-start gap-5">
-                <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shrink-0 font-black text-lg shadow-inner transition-all duration-300 ${
+                <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center shrink-0 font-bold text-lg shadow-inner transition-all duration-300 ${
                   isVideo 
                     ? 'bg-[#7435D5]/15 text-[#7435D5] group-hover:bg-[#7435D5] group-hover:text-white' 
                     : 'bg-[#E9F2FF] text-primaryBlue group-hover:bg-primaryBlue group-hover:text-white'
@@ -127,23 +122,23 @@ const MaterialPlaylist = () => {
 
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider bg-secondaryBg px-2.5 py-0.5 rounded-md border border-borderLine/80">
+                    <span className="text-[10px] font-semibold text-muted uppercase tracking-wider bg-secondaryBg px-2.5 py-0.5 rounded-md border border-borderLine/80">
                       Module {idx + 1}
                     </span>
-                    <span className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-md ${
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-md ${
                       isVideo ? 'text-[#7435D5] bg-[#7435D5]/10' : 'text-primaryBlue bg-[#E9F2FF]'
                     }`}>
                       {isVideo ? <Clock className="w-3 h-3" /> : <></>}
                       {isVideo ? (item.duration || 'Unknown duration') : (item.type || 'Document')}
                     </span>
                     {isVideo && item.videoUrl && item.videoUrl.includes('youtube') && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#E62E2E] bg-[#E62E2E]/10 px-2.5 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#E62E2E] bg-[#E62E2E]/10 px-2.5 py-0.5 rounded-md">
                         YouTube HD Stream
                       </span>
                     )}
                   </div>
 
-                  <h3 className={`text-lg sm:text-xl font-black text-navy transition-colors ${
+                  <h3 className={`text-lg sm:text-xl font-bold text-navy transition-colors ${
                     isVideo ? 'group-hover:text-[#7435D5]' : 'group-hover:text-primaryBlue'
                   }`}>
                     {item.title}
@@ -155,7 +150,7 @@ const MaterialPlaylist = () => {
 
                   {isVideo && item.progressPercentage !== undefined && (
                     <div className="mt-4 max-w-md">
-                      <div className="flex justify-between text-[10px] font-extrabold text-muted uppercase tracking-wider mb-1.5">
+                      <div className="flex justify-between text-[10px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                         <span>{item.progressPercentage === 100 ? 'Completed' : `${item.progressPercentage}% Completed`}</span>
                       </div>
                       <div className="w-full bg-secondaryBg border border-borderLine rounded-full h-2 overflow-hidden shadow-inner">
@@ -175,7 +170,7 @@ const MaterialPlaylist = () => {
                     e.stopPropagation();
                     navigate(isVideo ? `/video/${item._id}` : `/notes/${item._id}`);
                   }}
-                  className={`flex items-center gap-2 px-6 py-3.5 rounded-xl font-extrabold text-xs text-white shadow-md transition-all transform group-hover:scale-105 ${
+                  className={`flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-xs text-white shadow-md transition-all transform group-hover:scale-105 ${
                     isVideo ? 'bg-[#7435D5] hover:bg-[#5E25B2]' : 'bg-primaryBlue hover:bg-[#0F56C4]'
                   }`}
                 >
@@ -193,7 +188,7 @@ const MaterialPlaylist = () => {
       <div className="pt-6 mt-8 border-t border-borderLine flex items-center justify-between">
         <button
           onClick={() => navigate(`/lesson/${topicSlug}`)}
-          className="flex items-center gap-2 text-xs font-extrabold text-primaryBlue hover:underline"
+          className="flex items-center gap-2 text-xs font-semibold text-primaryBlue hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Return to {topic.title} Learning Cards</span>

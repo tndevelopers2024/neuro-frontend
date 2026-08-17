@@ -59,7 +59,7 @@ const IconDropdownSelector = ({ selectedIconName, onChange, color = '#126BEE' })
             <SelectedIconComp className="w-5 h-5" />
           </div>
           <div>
-            <span className="block text-xs font-black text-navy">{selectedItem.name}</span>
+            <span className="block text-xs font-bold text-navy">{selectedItem.name}</span>
             <span className="block text-[10px] text-muted font-normal">{selectedItem.label}</span>
           </div>
         </div>
@@ -67,8 +67,8 @@ const IconDropdownSelector = ({ selectedIconName, onChange, color = '#126BEE' })
       </button>
 
       {isOpen && (
-        <div className="absolute z-[100] mt-2 w-full min-w-[260px] max-h-64 overflow-y-auto bg-white border border-borderLine rounded-2xl shadow-elevated p-2 grid grid-cols-1 gap-1 animate-fadeIn left-0">
-          <div className="text-[10px] font-extrabold text-muted uppercase tracking-wider px-2 py-1 border-b border-borderLine/50 mb-1">
+        <div className="absolute z-[100] mt-2 w-full min-w-[260px] max-h-64 overflow-y-auto bg-white border border-borderLine rounded-lg shadow-elevated p-2 grid grid-cols-1 gap-1 animate-fadeIn left-0">
+          <div className="text-[10px] font-semibold text-muted uppercase tracking-wider px-2 py-1 border-b border-borderLine/50 mb-1">
             Select Lucide Icon Symbol
           </div>
           {AVAILABLE_ICONS.map((item) => {
@@ -90,7 +90,7 @@ const IconDropdownSelector = ({ selectedIconName, onChange, color = '#126BEE' })
                   <IconComponent className="w-4 h-4 shrink-0" />
                 </div>
                 <div>
-                  <div className="text-xs font-extrabold">{item.name}</div>
+                  <div className="text-xs font-semibold">{item.name}</div>
                   <div className="text-[10px] text-muted font-normal">{item.label}</div>
                 </div>
               </button>
@@ -253,15 +253,15 @@ const ManageTopics = () => {
   return (
     <div className="space-y-8 animate-fadeIn pb-24 relative">
       {/* Header Banner */}
-      <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-9 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-9 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-primaryBlue/10 via-purple-500/5 to-transparent rounded-full blur-2xl pointer-events-none" />
         <div className="relative z-10 max-w-3xl">
           <div className="flex items-center gap-2 mb-2">
-            <span className="bg-[#EAF9FB] text-cyan text-xs font-extrabold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+            <span className="bg-[#EAF9FB] text-cyan text-xs font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
               <Compass className="w-3.5 h-3.5" /> Tiered Curriculum Hierarchy
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-navy tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight">
             Manage Topics, Subtopics & Lessons
           </h1>
           <p className="text-sm font-medium text-muted mt-2 leading-relaxed">
@@ -273,14 +273,14 @@ const ManageTopics = () => {
           <button
             onClick={seedDefaults}
             type="button"
-            className="px-4 py-3.5 rounded-2xl bg-[#EAF9FB] text-cyan font-black text-xs flex items-center gap-2 hover:bg-[#D5F4F8] transition-all border border-cyan/20 shadow-xs"
+            className="px-4 py-3.5 rounded-lg bg-[#EAF9FB] text-cyan font-bold text-xs flex items-center gap-2 hover:bg-[#D5F4F8] transition-all border border-cyan/20 shadow-xs"
           >
             <Sparkles className="w-4 h-4 stroke-[2.5]" />
             <span>⚡ Hydrate Sample Nodes</span>
           </button>
           <button
             onClick={openCreateModal}
-            className="btn-primary px-6 py-3.5 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-lg hover:scale-[1.02] transition-transform bg-primaryBlue"
+            className="btn-primary px-6 py-3.5 rounded-lg font-semibold text-xs flex items-center gap-2 shadow-lg hover:scale-[1.02] transition-transform bg-primaryBlue"
           >
             <Plus className="w-5 h-5 stroke-[2.5]" />
             <span>Create New Node</span>
@@ -289,10 +289,10 @@ const ManageTopics = () => {
       </div>
 
       {/* Interactive Hierarchy Table */}
-      <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft space-y-6">
+      <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-8 shadow-soft space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-borderLine pb-5">
           <div>
-            <h3 className="text-base font-extrabold text-navy flex items-center gap-2">
+            <h3 className="text-base font-semibold text-navy flex items-center gap-2">
               <Network className="w-5 h-5 text-medicalGreen" />
               <span>Curriculum Hierarchy Table ({filteredTopics.length} Nodes)</span>
             </h3>
@@ -300,7 +300,7 @@ const ManageTopics = () => {
           </div>
 
           {/* Tier Filter Bar */}
-          <div className="flex items-center gap-1.5 bg-secondaryBg p-1.5 rounded-2xl border border-borderLine overflow-x-auto max-w-full">
+          <div className="flex items-center gap-1.5 bg-secondaryBg p-1.5 rounded-lg border border-borderLine overflow-x-auto max-w-full">
             {[
               { id: 'ALL', label: 'All Tiers' },
               { id: 1, label: 'Tier 1: Branches' },
@@ -310,7 +310,7 @@ const ManageTopics = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTierFilter(tab.id)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
                   activeTierFilter === tab.id
                     ? 'bg-primaryBlue text-white shadow-sm'
                     : 'text-muted hover:text-navy'
@@ -325,7 +325,7 @@ const ManageTopics = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-borderLine text-[11px] font-extrabold text-muted uppercase tracking-wider">
+              <tr className="border-b border-borderLine text-[11px] font-semibold text-muted uppercase tracking-wider">
                 <th className="py-3.5 px-4">Topic / Subtopic Title</th>
                 <th className="py-3.5 px-4">Tier Level</th>
                 <th className="py-3.5 px-4">Parent Link</th>
@@ -345,13 +345,13 @@ const ManageTopics = () => {
                           <IconComp className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="font-extrabold text-navy group-hover:text-primaryBlue transition-colors">{t.title}</div>
+                          <div className="font-semibold text-navy group-hover:text-primaryBlue transition-colors">{t.title}</div>
                           <div className="text-[11px] text-muted line-clamp-1">{t.description || 'Clinical diagnostics & study module.'}</div>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`text-[11px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1 ${
+                      <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1 ${
                         t.level === 1 ? 'bg-[#E9F2FF] text-primaryBlue border border-primaryBlue/20' :
                         t.level === 2 ? 'bg-[#EAF7ED] text-medicalGreen border border-medicalGreen/20' :
                         'bg-[#FFF5ED] text-amber-600 border border-amber-500/20'
@@ -371,7 +371,7 @@ const ManageTopics = () => {
                       )}
                     </td>
                     <td className="py-4 px-4 text-xs font-mono text-muted">{t.slug}</td>
-                    <td className="py-4 px-4 font-black text-navy">#{t.displayOrder || 1}</td>
+                    <td className="py-4 px-4 font-bold text-navy">#{t.displayOrder || 1}</td>
                     <td className="py-4 px-4 text-right">
                       <div className="inline-flex items-center gap-1.5">
                         <button
@@ -408,7 +408,7 @@ const ManageTopics = () => {
       {/* ======================= MODAL: TOPIC / SUBTOPIC POPUP DIALOG ======================= */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-elevated max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-8 shadow-elevated max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondaryBg text-muted hover:text-navy transition-colors"
@@ -421,7 +421,7 @@ const ManageTopics = () => {
                 <Compass className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg md:text-xl font-black text-navy">
+                <h3 className="text-lg md:text-xl font-bold text-navy">
                   {editingId ? 'Edit Curriculum Node' : 'Create New Curriculum Node'}
                 </h3>
                 <p className="text-xs text-muted font-medium">Configure tier classification, visual styling, and parent linkages.</p>
@@ -438,7 +438,7 @@ const ManageTopics = () => {
                     placeholder="e.g., Autism Spectrum Disorder"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-primaryBlue"
                   />
                 </div>
 
@@ -448,7 +448,7 @@ const ManageTopics = () => {
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
                     required
-                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-primaryBlue"
                   >
                     <option value="">-- Select Category --</option>
                     {categories.map((c) => (
@@ -472,12 +472,12 @@ const ManageTopics = () => {
                     <div
                       key={tier.level}
                       onClick={() => setForm({ ...form, level: tier.level })}
-                      className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                      className={`p-3.5 rounded-lg border transition-all cursor-pointer flex flex-col justify-between ${
                         form.level === tier.level ? 'border-primaryBlue bg-[#E9F2FF]/30 shadow-xs' : 'border-borderLine hover:border-muted/30 bg-secondaryBg/40'
                       }`}
                     >
                       <div>
-                        <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border ${tier.badge}`}>
+                        <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full uppercase border ${tier.badge}`}>
                           {tier.name}
                         </span>
                         <p className="text-[11px] text-muted font-semibold mt-2.5 leading-tight">{tier.desc}</p>
@@ -520,7 +520,7 @@ const ManageTopics = () => {
                   <select
                     value={form.color}
                     onChange={(e) => setForm({ ...form, color: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-black text-sm text-navy outline-none focus:border-primaryBlue"
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-bold text-sm text-navy outline-none focus:border-primaryBlue"
                   >
                     <option value="#126BEE">🔵 Royal Blue (#126BEE)</option>
                     <option value="#21A447">🟢 Medical Green (#21A447)</option>
@@ -538,7 +538,7 @@ const ManageTopics = () => {
                     placeholder="1"
                     value={form.displayOrder}
                     onChange={(e) => setForm({ ...form, displayOrder: parseInt(e.target.value) || 1 })}
-                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-black text-sm text-navy outline-none focus:border-primaryBlue"
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-bold text-sm text-navy outline-none focus:border-primaryBlue"
                   />
                 </div>
               </div>

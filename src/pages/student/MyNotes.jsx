@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, Plus, Trash2, Edit3, Save, Search, Sparkles, X } from 'lucide-react';
+import { FileText, Plus, Trash2, Edit3, Save, Search, Sparkles, X, Eye } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
@@ -9,6 +9,7 @@ const MyNotes = () => {
   const [search, setSearch] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [viewingNote, setViewingNote] = useState(null);
   const [form, setForm] = useState({ title: '', content: '', topicTitle: 'General Clinical Note' });
   const queryClient = useQueryClient();
 
@@ -54,9 +55,9 @@ const MyNotes = () => {
     <div className="space-y-6 animate-fadeIn pb-16 max-w-7xl mx-auto">
       <Breadcrumb items={[{ title: 'Home', link: '/' }, { title: 'Personal Study Notes Vault' }]} />
 
-      <div className="bg-white border border-borderLine rounded-3xl p-7 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-white border border-borderLine rounded-xl p-7 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-navy tracking-tight flex items-center gap-2.5">
+          <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight flex items-center gap-2.5">
             <FileText className="w-7 h-7 text-primaryBlue" /> Resident Study Vault
           </h1>
           <p className="text-sm font-medium text-muted mt-1">
@@ -85,9 +86,9 @@ const MyNotes = () => {
       </div>
 
       {showEditor && (
-        <div className="bg-white border border-primaryBlue/30 rounded-3xl p-7 shadow-elevated animate-fadeIn space-y-4">
+        <div className="bg-white border border-primaryBlue/30 rounded-xl p-7 shadow-elevated animate-fadeIn space-y-4">
           <div className="flex items-center justify-between border-b border-borderLine pb-3">
-            <h3 className="text-lg font-extrabold text-navy">{editingId ? 'Edit Study Note' : 'Create New Study Note'}</h3>
+            <h3 className="text-lg font-semibold text-navy">{editingId ? 'Edit Study Note' : 'Create New Study Note'}</h3>
             <button onClick={() => setShowEditor(false)} className="p-1 text-muted hover:text-navy"><X className="w-5 h-5" /></button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -108,7 +109,7 @@ const MyNotes = () => {
           </div>
           <textarea
             rows={8}
-            placeholder="Type your study summary, diagnostic rules, or lecture takeaways here..."
+            placeholder="Take notes here..."
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
             className="w-full p-4 rounded-xl bg-secondaryBg border border-borderLine font-medium text-sm text-navy outline-none resize-none shadow-inner/30"
@@ -124,10 +125,10 @@ const MyNotes = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredNotes.map((note) => (
-          <div key={note._id} className="bg-white border border-borderLine rounded-3xl p-7 shadow-soft flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div key={note._id} className="bg-white border border-borderLine rounded-xl p-7 shadow-soft flex flex-col justify-between hover:shadow-md transition-shadow">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="bg-secondaryBg text-primaryBlue border border-borderLine text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                <span className="bg-secondaryBg text-primaryBlue border border-borderLine text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
                   {note.topicTitle || 'Clinical Note'}
                 </span>
                 <div className="flex items-center gap-1">
@@ -139,10 +140,16 @@ const MyNotes = () => {
                   </button>
                 </div>
               </div>
-              <h3 className="text-lg font-black text-navy">{note.title}</h3>
-              <p className="text-sm font-medium text-muted mt-3 leading-relaxed whitespace-pre-line">
+              <h3 className="text-lg font-bold text-navy">{note.title}</h3>
+              <p className="text-sm font-medium text-muted mt-3 leading-relaxed whitespace-pre-line line-clamp-4">
                 {note.content}
               </p>
+              <button 
+                onClick={() => setViewingNote(note)} 
+                className="mt-4 flex items-center gap-1.5 text-xs font-bold text-primaryBlue hover:underline"
+              >
+                 <Eye className="w-4 h-4" /> View Full Note
+              </button>
             </div>
             <div className="mt-6 pt-3 border-t border-borderLine/70 text-[11px] font-semibold text-muted/80 flex items-center justify-between">
               <span>Synchronized securely in cloud</span>
@@ -151,6 +158,35 @@ const MyNotes = () => {
           </div>
         ))}
       </div>
+
+      {/* View Note Modal */}
+      {viewingNote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-elevated w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden relative">
+            <div className="p-6 md:p-8 border-b border-borderLine bg-secondaryBg/30 pr-16">
+              <span className="bg-white text-primaryBlue border border-borderLine shadow-xs text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-3">
+                {viewingNote.topicTitle || 'Clinical Note'}
+              </span>
+              <h2 className="text-xl md:text-2xl font-bold text-navy">{viewingNote.title}</h2>
+              <button 
+                onClick={() => setViewingNote(null)} 
+                className="p-2 bg-white border border-borderLine rounded-full text-muted hover:text-navy hover:shadow-md transition-all absolute top-6 right-6"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 md:p-8 overflow-y-auto">
+              <p className="text-sm md:text-base font-medium text-navy/80 leading-relaxed whitespace-pre-wrap">
+                {viewingNote.content}
+              </p>
+            </div>
+            <div className="p-5 bg-secondaryBg border-t border-borderLine text-xs font-bold text-muted flex justify-between items-center">
+               <span>Synchronized securely in cloud</span>
+               <span>Updated: {new Date(viewingNote.updatedAt || Date.now()).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

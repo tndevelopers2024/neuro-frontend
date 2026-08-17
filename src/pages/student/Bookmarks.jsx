@@ -38,9 +38,9 @@ const Bookmarks = () => {
     <div className="space-y-6 animate-fadeIn pb-16 max-w-7xl mx-auto">
       <Breadcrumb items={[{ title: 'Home', link: '/' }, { title: 'Personal Bookmarks & Favorites' }]} />
 
-      <div className="bg-white border border-borderLine rounded-3xl p-7 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-white border border-borderLine rounded-xl p-7 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-navy tracking-tight flex items-center gap-2.5">
+          <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight flex items-center gap-2.5">
             <BookmarkIcon className="w-7 h-7 text-primaryBlue fill-primaryBlue/20" /> Personal Bookmarks
           </h1>
           <p className="text-sm font-medium text-muted mt-1">
@@ -66,7 +66,7 @@ const Bookmarks = () => {
           <div key={bm._id} className="medical-card flex flex-col justify-between group relative">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider bg-[#E9F2FF] text-primaryBlue">
+                <span className="text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider bg-[#E9F2FF] text-primaryBlue">
                   {bm.targetType || 'Saved Topic'}
                 </span>
                 <button
@@ -77,7 +77,7 @@ const Bookmarks = () => {
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <h3 className="text-lg font-black text-navy group-hover:text-primaryBlue transition-colors">{bm.title}</h3>
+              <h3 className="text-lg font-bold text-navy group-hover:text-primaryBlue transition-colors">{bm.title}</h3>
               <p className="text-xs font-semibold text-muted mt-1 leading-relaxed">{bm.subtitle}</p>
             </div>
 

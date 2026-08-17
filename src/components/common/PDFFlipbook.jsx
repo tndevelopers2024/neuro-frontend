@@ -4,11 +4,14 @@ import HTMLFlipBook from 'react-pageflip';
 import { Maximize2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+import DrawingCanvas from './DrawingCanvas.jsx';
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-const Page = forwardRef(({ pageNumber }, ref) => {
+const Page = forwardRef(({ pageNumber, drawings, isDrawingMode, activeColor, activeWidth, activeOpacity, activeTool, handleLinesChange }, ref) => {
+  const [pdfDim, setPdfDim] = useState({ width: 1000, height: 1414 });
+
   return (
     <div 
       ref={ref} 
@@ -17,15 +20,36 @@ const Page = forwardRef(({ pageNumber }, ref) => {
       <ReactPdfPage 
         pageNumber={pageNumber} 
         scale={2}
+        className="!w-full !h-full flex items-center justify-center [&>.react-pdf__Page__canvas]:!w-full [&>.react-pdf__Page__canvas]:!h-full [&>.react-pdf__Page__canvas]:!object-contain"
         renderTextLayer={false} 
         renderAnnotationLayer={false} 
         loading={<div className="flex items-center justify-center w-full h-full"><Loader2 className="w-8 h-8 text-primaryBlue animate-spin" /></div>}
+        onLoadSuccess={(page) => {
+          const viewport = page.getViewport({ scale: 1 });
+          setPdfDim({ width: viewport.width, height: viewport.height });
+        }}
       />
+      <div 
+        className="absolute inset-0"
+        style={{ pointerEvents: isDrawingMode ? 'auto' : 'none' }}
+      >
+        <DrawingCanvas 
+          width={pdfDim.width}
+          height={pdfDim.height}
+          isDrawingMode={isDrawingMode}
+          activeColor={activeColor}
+          activeWidth={activeWidth}
+          activeOpacity={activeOpacity}
+          activeTool={activeTool}
+          lines={drawings[pageNumber] || []}
+          onLinesChange={(newLines) => handleLinesChange(pageNumber, newLines)}
+        />
+      </div>
     </div>
   );
 });
 
-const PDFFlipbook = ({ fileUrl, toggleFullScreen }) => {
+const PDFFlipbook = ({ fileUrl, toggleFullScreen, drawings, setDrawings, isDrawingMode, activeColor, activeWidth, activeOpacity, activeTool }) => {
   const [numPages, setNumPages] = useState(null);
   const [dimensions, setDimensions] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,6 +57,13 @@ const PDFFlipbook = ({ fileUrl, toggleFullScreen }) => {
   const [showBottomBar, setShowBottomBar] = useState(false);
   const bookRef = useRef();
   const containerRef = useRef();
+
+  const handleLinesChange = (pageNum, newLines) => {
+    setDrawings(prev => ({
+      ...prev,
+      [pageNum]: newLines
+    }));
+  };
 
   // Sync input with actual page when flipping
   useEffect(() => {
@@ -154,6 +185,7 @@ const PDFFlipbook = ({ fileUrl, toggleFullScreen }) => {
               showCover={true}
               mobileScrollSupport={true}
               usePortrait={true}
+              useMouseEvents={true}
               onFlip={onFlip}
               className="flipbook-wrapper"
               ref={bookRef}
@@ -162,6 +194,13 @@ const PDFFlipbook = ({ fileUrl, toggleFullScreen }) => {
                 <Page 
                   key={`page_${index + 1}`} 
                   pageNumber={index + 1} 
+                  drawings={drawings}
+                  isDrawingMode={isDrawingMode}
+                  activeColor={activeColor}
+                  activeWidth={activeWidth}
+                  activeOpacity={activeOpacity}
+                  activeTool={activeTool}
+                  handleLinesChange={handleLinesChange}
                 />
               ))}
             </HTMLFlipBook>
@@ -172,7 +211,7 @@ const PDFFlipbook = ({ fileUrl, toggleFullScreen }) => {
       {/* Navigation Controls */}
       {numPages && (
         <div 
-          className={`absolute bottom-6 z-20 flex items-center gap-4 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-elevated border border-borderLine transition-all duration-300 ${showBottomBar ? 'translate-y-0 opacity-100 visible' : 'translate-y-8 opacity-0 invisible'}`}
+          className={`absolute bottom-28 z-20 flex items-center gap-4 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-lg shadow-elevated border border-borderLine transition-all duration-300 ${showBottomBar ? 'translate-y-0 opacity-100 visible' : 'translate-y-8 opacity-0 invisible'}`}
         >
           <button 
             onClick={() => bookRef.current?.pageFlip()?.flipPrev()}

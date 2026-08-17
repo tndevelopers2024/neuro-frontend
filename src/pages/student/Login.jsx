@@ -53,10 +53,10 @@ const Login = () => {
 
       <div className="max-w-md w-full bg-white border border-borderLine rounded-[28px] p-8 md:p-10 shadow-elevated relative z-10 animate-fadeIn">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-[#E9F2FF] border border-primaryBlue/20 flex items-center justify-center mx-auto mb-4 shadow-sm">
+          <div className="w-16 h-16 rounded-lg bg-[#E9F2FF] border border-primaryBlue/20 flex items-center justify-center mx-auto mb-4 shadow-sm">
             <Brain className="w-10 h-10 text-primaryBlue animate-pulse" />
           </div>
-          <h1 className="text-2xl font-extrabold text-navy tracking-tight">Welcome to NeuroMind</h1>
+          <h1 className="text-2xl font-semibold text-navy tracking-tight">Welcome to NeuroMind</h1>
           <p className="text-xs font-semibold text-muted mt-1 uppercase tracking-wider">Interactive Neurology & Psychiatry Platform</p>
         </div>
 

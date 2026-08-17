@@ -32,10 +32,10 @@ const Register = () => {
     <div className="min-h-screen bg-secondaryBg flex items-center justify-center p-6 select-none relative overflow-hidden">
       <div className="max-w-lg w-full bg-white border border-borderLine rounded-[28px] p-8 md:p-10 shadow-elevated relative z-10 animate-fadeIn">
         <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-[#E9F2FF] border border-primaryBlue/20 flex items-center justify-center mx-auto mb-3 shadow-sm">
+          <div className="w-14 h-14 rounded-lg bg-[#E9F2FF] border border-primaryBlue/20 flex items-center justify-center mx-auto mb-3 shadow-sm">
             <Brain className="w-8 h-8 text-primaryBlue" />
           </div>
-          <h1 className="text-2xl font-extrabold text-navy tracking-tight">Create Scholar Account</h1>
+          <h1 className="text-2xl font-semibold text-navy tracking-tight">Create Scholar Account</h1>
           <p className="text-xs font-semibold text-muted mt-1 uppercase tracking-wider">Join Medical Resident Clinical Network</p>
         </div>
 

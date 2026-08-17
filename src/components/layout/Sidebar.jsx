@@ -29,12 +29,12 @@ const Sidebar = () => {
   });
 
   const stats = progressData?.stats || {
-    progressPercentage: 68,
-    topicsExplored: 124,
-    totalTopics: 182,
-    notesCreated: 36,
-    flashcardsAvailable: 220,
-    quizzesTaken: 18,
+    progressPercentage: 0,
+    topicsExplored: 0,
+    totalTopics: 0,
+    notesCreated: 0,
+    flashcardsAvailable: 0,
+    quizzesTaken: 0,
   };
 
   const navItems = [
@@ -50,7 +50,7 @@ const Sidebar = () => {
   ];
 
   // SVG Circular progress bar metrics
-  const percentage = stats.progressPercentage || 68;
+  const percentage = stats.progressPercentage ?? (stats.totalTopics > 0 ? Math.round((stats.topicsExplored / stats.totalTopics) * 100) : 0);
   const radius = 38;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
@@ -65,7 +65,7 @@ const Sidebar = () => {
           </div>
           <div>
             <div className="font-bold text-navy tracking-tight text-lg leading-none">NEUROMIND</div>
-            <div className="text-[10px] font-extrabold text-primaryBlue tracking-widest mt-1 uppercase">SCHOLARS</div>
+            <div className="text-[10px] font-semibold text-primaryBlue tracking-widest mt-1 uppercase">SCHOLARS</div>
           </div>
         </Link>
 
@@ -98,7 +98,7 @@ const Sidebar = () => {
       </div>
 
       {/* Dynamic Progress Card (Section 4 Reference) */}
-      <div className="mt-8 bg-secondaryBg border border-borderLine rounded-2xl p-5 shadow-soft hover:shadow-md transition-shadow">
+      <div className="mt-8 bg-secondaryBg border border-borderLine rounded-lg p-5 shadow-soft hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold text-navy tracking-wider uppercase">YOUR PROGRESS</span>
           <TrendingUp className="w-4 h-4 text-primaryBlue animate-bounce" />
@@ -129,7 +129,7 @@ const Sidebar = () => {
               />
             </svg>
             <div className="absolute flex flex-col items-center justify-center text-center">
-              <span className="text-2xl font-black text-primaryBlue tracking-tight">{percentage}%</span>
+              <span className="text-2xl font-bold text-primaryBlue tracking-tight">{percentage}%</span>
               <span className="text-[10px] font-bold text-muted uppercase mt-0.5">Explored</span>
             </div>
           </div>
@@ -141,15 +141,15 @@ const Sidebar = () => {
         {/* Quick Study Activity Counts */}
         <div className="grid grid-cols-3 gap-1.5 pt-3 border-t border-borderLine/70 text-center">
           <div className="bg-white p-2 rounded-xl border border-borderLine/60 shadow-xs">
-            <div className="text-xs font-black text-navy">{stats.notesCreated}</div>
+            <div className="text-xs font-bold text-navy">{stats.notesCreated}</div>
             <div className="text-[9px] font-bold text-muted uppercase mt-0.5">Notes</div>
           </div>
           <div className="bg-white p-2 rounded-xl border border-borderLine/60 shadow-xs">
-            <div className="text-xs font-black text-primaryBlue">{stats.flashcardsAvailable}</div>
+            <div className="text-xs font-bold text-primaryBlue">{stats.flashcardsAvailable}</div>
             <div className="text-[9px] font-bold text-muted uppercase mt-0.5">Cards</div>
           </div>
           <div className="bg-white p-2 rounded-xl border border-borderLine/60 shadow-xs">
-            <div className="text-xs font-black text-medicalGreen">{stats.quizzesTaken}</div>
+            <div className="text-xs font-bold text-medicalGreen">{stats.quizzesTaken}</div>
             <div className="text-[9px] font-bold text-muted uppercase mt-0.5">Quizzes</div>
           </div>
         </div>

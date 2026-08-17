@@ -76,7 +76,7 @@ const Header = () => {
 
         {/* Search Results Autocomplete Dropdown */}
         {showDropdown && searchTerm.trim().length >= 2 && (
-          <div className="absolute top-full mt-2 w-full bg-white border border-borderLine rounded-2xl shadow-elevated overflow-hidden z-50 animate-fadeIn">
+          <div className="absolute top-full mt-2 w-full bg-white border border-borderLine rounded-lg shadow-elevated overflow-hidden z-50 animate-fadeIn">
             <div className="px-4 py-2 bg-secondaryBg/80 border-b border-borderLine text-xs font-semibold uppercase tracking-wider text-muted">
               {isFetching ? 'Searching curriculum...' : `Results for "${searchTerm}"`}
             </div>
@@ -143,7 +143,7 @@ const Header = () => {
             <span className="text-xs font-bold text-navy hidden xl:inline-block pl-1 max-w-[120px] truncate">
               {user ? user.fullName.split(' ')[0] : 'Resident'} 👋
             </span>
-            <div className="w-9 h-9 rounded-full bg-primaryBlue text-white font-bold flex items-center justify-center shadow-md overflow-hidden border-2 border-white">
+            <div className="w-9 h-9 rounded-full bg-primaryBlue text-white font-bold flex items-center justify-center shadow-md overflow-hidden border border-white">
               {user?.profileImage ? (
                 <img src={user.profileImage} alt="User" className="w-full h-full object-cover" />
               ) : (
@@ -153,7 +153,7 @@ const Header = () => {
           </button>
 
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-borderLine rounded-2xl shadow-elevated py-2 z-50 animate-fadeIn">
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-borderLine rounded-lg shadow-elevated py-2 z-50 animate-fadeIn">
               <div className="px-5 py-3 border-b border-borderLine/80">
                 <div className="font-bold text-sm text-navy">{user?.fullName || 'Resident Dr. Sarah Jenkins'}</div>
                 <div className="text-xs font-medium text-muted truncate">{user?.email || 'resident@neuromind.edu'}</div>

@@ -55,7 +55,7 @@ const Flashcards = () => {
 
   if (isLoading) {
     return (
-      <div className="p-16 text-center font-bold text-navy flex flex-col items-center gap-3">
+      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
         <Layers className="w-10 h-10 text-primaryBlue animate-bounce" />
         <span>Loading Flashcard Memory Decks...</span>
       </div>
@@ -68,12 +68,12 @@ const Flashcards = () => {
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm font-extrabold text-primaryBlue hover:underline"
+            className="flex items-center gap-2 text-sm font-semibold text-primaryBlue hover:underline"
           >
             <ArrowLeft className="w-4 h-4" /> Return to Curriculum
           </button>
         </div>
-        <div className="p-16 text-center font-bold text-navy flex flex-col items-center gap-3 bg-white border border-borderLine rounded-3xl shadow-soft">
+        <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3 bg-white border border-borderLine rounded-xl shadow-soft">
           <Layers className="w-10 h-10 text-muted" />
           <span>No flashcards available for this topic yet.</span>
         </div>
@@ -86,11 +86,11 @@ const Flashcards = () => {
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm font-extrabold text-primaryBlue hover:underline"
+          className="flex items-center gap-2 text-sm font-semibold text-primaryBlue hover:underline"
         >
           <ArrowLeft className="w-4 h-4" /> Return to Curriculum
         </button>
-        <span className="bg-[#E9F2FF] text-primaryBlue text-xs font-extrabold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+        <span className="bg-[#E9F2FF] text-primaryBlue text-xs font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
           <Sparkles className="w-3.5 h-3.5" /> Active Recall Deck ({currIndex + 1} of {flashcards.length})
         </span>
       </div>
@@ -101,14 +101,14 @@ const Flashcards = () => {
         className="w-full h-96 [perspective:1200px] cursor-pointer group select-none"
       >
         <div
-          className={`relative w-full h-full rounded-3xl transition-transform duration-500 [transform-style:preserve-3d] shadow-elevated border border-borderLine ${
+          className={`relative w-full h-full rounded-xl transition-transform duration-500 [transform-style:preserve-3d] shadow-elevated border border-borderLine ${
             isFlipped ? '[transform:rotateY(180deg)]' : ''
           }`}
         >
           {/* Front Face of Card */}
-          <div className="absolute inset-0 w-full h-full bg-white rounded-3xl p-10 flex flex-col justify-between [backface-visibility:hidden]">
+          <div className="absolute inset-0 w-full h-full bg-white rounded-xl p-10 flex flex-col justify-between [backface-visibility:hidden]">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider bg-secondaryBg text-muted border border-borderLine">
+              <span className="text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider bg-secondaryBg text-muted border border-borderLine">
                 {currentCard.categoryTag || 'Clinical Term'}
               </span>
               <span className="text-xs font-bold text-primaryBlue flex items-center gap-1 group-hover:underline">
@@ -117,7 +117,7 @@ const Flashcards = () => {
             </div>
 
             <div className="text-center my-auto px-6">
-              <h2 className="text-2xl md:text-3xl font-black text-navy tracking-tight leading-normal">
+              <h2 className="text-2xl md:text-3xl font-bold text-navy tracking-tight leading-normal">
                 {currentCard.frontTerm}
               </h2>
             </div>
@@ -128,9 +128,9 @@ const Flashcards = () => {
           </div>
 
           {/* Back Face of Card (Answer) */}
-          <div className="absolute inset-0 w-full h-full bg-[#FAFCFF] rounded-3xl p-10 flex flex-col justify-between [transform:rotateY(180deg)] [backface-visibility:hidden] border-2 border-primaryBlue/30 shadow-inner">
+          <div className="absolute inset-0 w-full h-full bg-[#FAFCFF] rounded-xl p-10 flex flex-col justify-between [transform:rotateY(180deg)] [backface-visibility:hidden] border border-primaryBlue/30 shadow-inner">
             <div className="flex items-center justify-between">
-              <span className="bg-[#E9F2FF] text-primaryBlue text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+              <span className="bg-[#E9F2FF] text-primaryBlue text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
                 Clinical Definition & Rationale
               </span>
               <span className="text-xs font-bold text-muted flex items-center gap-1">
@@ -144,7 +144,7 @@ const Flashcards = () => {
               </p>
             </div>
 
-            <div className="text-center pt-4 border-t border-borderLine/60 text-xs font-extrabold text-medicalGreen">
+            <div className="text-center pt-4 border-t border-borderLine/60 text-xs font-semibold text-medicalGreen">
               ✨ Mastered concept! Use navigation below for next card.
             </div>
           </div>

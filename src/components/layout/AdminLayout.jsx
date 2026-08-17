@@ -40,11 +40,11 @@ const AdminLayout = () => {
       <aside className="w-72 h-screen bg-navy text-white flex flex-col justify-between p-6 shrink-0 shadow-elevated z-30 sticky top-0 overflow-y-auto">
         <div>
           <div className="flex items-center gap-3 px-1 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primaryBlue text-white flex items-center justify-center font-black text-lg shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-primaryBlue text-white flex items-center justify-center font-bold text-lg shadow-md">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <div className="font-extrabold text-white tracking-tight text-base leading-none">ADMIN PORTAL</div>
+              <div className="font-semibold text-white tracking-tight text-base leading-none">ADMIN PORTAL</div>
               <div className="text-[10px] font-bold text-primaryBlue tracking-widest mt-1 uppercase">CURRICULUM ENGINE</div>
             </div>
           </div>
@@ -52,7 +52,7 @@ const AdminLayout = () => {
           <nav className="space-y-6">
             {navGroups.map((group) => (
               <div key={group.title} className="space-y-2">
-                <div className="px-3 text-[11px] font-extrabold text-primaryBlue uppercase tracking-wider">
+                <div className="px-3 text-[11px] font-semibold text-primaryBlue uppercase tracking-wider">
                   {group.title}
                 </div>
                 <div className="space-y-1">
@@ -85,7 +85,7 @@ const AdminLayout = () => {
         <div className="space-y-3 pt-6 border-t border-white/15">
           <Link
             to="/"
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs transition-all shadow-xs"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-all shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Exit to Student Curriculum</span>
@@ -93,7 +93,7 @@ const AdminLayout = () => {
 
           <button
             onClick={() => { logout(); navigate('/login'); }}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#DB2674] hover:bg-[#B7185D] text-white font-extrabold text-xs transition-all shadow-md"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#DB2674] hover:bg-[#B7185D] text-white font-semibold text-xs transition-all shadow-md"
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out Securely</span>

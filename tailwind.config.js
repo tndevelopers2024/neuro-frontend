@@ -24,13 +24,13 @@ export default {
         sans: ['Inter', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
-        'card': '20px',
+        'card': '12px',
         'pill': '9999px',
       },
       boxShadow: {
-        'soft': '0 4px 24px rgba(7, 26, 92, 0.04)',
-        'elevated': '0 10px 30px rgba(7, 26, 92, 0.08)',
-        'glowBlue': '0 0 25px rgba(18, 107, 238, 0.25)',
+        'soft': '0 2px 10px rgba(7, 26, 92, 0.03)',
+        'elevated': '0 6px 16px rgba(7, 26, 92, 0.06)',
+        'glowBlue': '0 0 15px rgba(18, 107, 238, 0.15)',
       },
     },
   },

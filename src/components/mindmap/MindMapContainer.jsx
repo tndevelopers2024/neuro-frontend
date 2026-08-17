@@ -5,11 +5,16 @@ import '@xyflow/react/dist/style.css';
 import CenterNode from './CenterNode.jsx';
 import OrbitNode from './OrbitNode.jsx';
 import SubtopicNode from './SubtopicNode.jsx';
+import CurvedEdge from './CurvedEdge.jsx';
 
 const nodeTypes = {
   center: CenterNode,
   orbit: OrbitNode,
   subtopic: SubtopicNode,
+};
+
+const edgeTypes = {
+  curved: CurvedEdge,
 };
 
 const MindMapContainer = ({ initialNodes = [], initialEdges = [], onNodeClick, className = 'h-[800px]' }) => {
@@ -37,15 +42,55 @@ const MindMapContainer = ({ initialNodes = [], initialEdges = [], onNodeClick, c
     [onNodeClick]
   );
 
+  const onNodeMouseEnter = useCallback((event, node) => {
+    if (node.type === 'center') return;
+    
+    setNodes((nds) => {
+      const relatedNodeIds = new Set([node.id, 'center-psychiatry']);
+      if (node.parentId) relatedNodeIds.add(node.parentId);
+      
+      nds.forEach(n => {
+        if (n.parentId === node.id) relatedNodeIds.add(n.id);
+      });
+      
+      setEdges((eds) => eds.map(e => ({
+        ...e,
+        style: { ...e.style, opacity: (relatedNodeIds.has(e.source) && relatedNodeIds.has(e.target)) ? 1 : 0.1, transition: 'opacity 0.3s ease' }
+      })));
+      
+      return nds.map(n => ({
+        ...n,
+        style: { ...n.style, opacity: relatedNodeIds.has(n.id) ? 1 : 0.2, transition: 'opacity 0.3s ease' },
+        className: (n.className || '').replace(' !z-50', '') + (relatedNodeIds.has(n.id) ? ' !z-50' : '')
+      }));
+    });
+  }, [setNodes, setEdges]);
+
+  const onNodeMouseLeave = useCallback(() => {
+    setNodes((nds) => nds.map(n => ({
+      ...n,
+      style: { ...n.style, opacity: 1 },
+      className: (n.className || '').replace(' !z-50', '')
+    })));
+    
+    setEdges((eds) => eds.map(e => ({
+      ...e,
+      style: { ...e.style, opacity: 1 }
+    })));
+  }, [setNodes, setEdges]);
+
   return (
-    <div className={`w-full ${className} bg-[#FAFAFC] border border-borderLine rounded-3xl shadow-soft overflow-hidden relative select-none`}>
+    <div className={`w-full ${className} bg-[#FAFAFC] border border-borderLine rounded-xl shadow-soft overflow-hidden relative select-none`}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
+        onNodeMouseEnter={onNodeMouseEnter}
+        onNodeMouseLeave={onNodeMouseLeave}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.15, maxZoom: 1.15 }}
         minZoom={0.2}

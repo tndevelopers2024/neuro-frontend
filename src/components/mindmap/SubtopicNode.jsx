@@ -21,13 +21,13 @@ const SubtopicNode = ({ data }) => {
       <Handle
         type="target"
         position={alignRight ? Position.Left : Position.Right}
-        className="!w-2 !h-2 !rounded-full !border-2 !border-white"
+        className="!w-2 !h-2 !rounded-full !border !border-white"
         style={{ backgroundColor: themeColor }}
       />
       <Handle
         type="source"
         position={alignRight ? Position.Right : Position.Left}
-        className="!w-2 !h-2 !rounded-full !border-2 !border-white opacity-0"
+        className="!w-2 !h-2 !rounded-full !border !border-white opacity-0"
         style={{ backgroundColor: themeColor }}
       />
 

@@ -191,7 +191,7 @@ const IconDropdownSelector = ({ selectedIconName, onChange, color = '#126BEE' })
             <SelectedIconComp className="w-5 h-5" />
           </div>
           <div>
-            <span className="block text-xs font-black text-navy">{selectedItem.name}</span>
+            <span className="block text-xs font-bold text-navy">{selectedItem.name}</span>
             <span className="block text-[10px] text-muted font-normal">{selectedItem.label}</span>
           </div>
         </div>
@@ -199,8 +199,8 @@ const IconDropdownSelector = ({ selectedIconName, onChange, color = '#126BEE' })
       </button>
 
       {isOpen && (
-        <div className="absolute z-[100] mt-2 w-full min-w-[260px] max-h-64 overflow-y-auto bg-white border border-borderLine rounded-2xl shadow-elevated p-2 grid grid-cols-1 gap-1 animate-fadeIn left-0">
-          <div className="text-[10px] font-extrabold text-muted uppercase tracking-wider px-2 py-1 border-b border-borderLine/50 mb-1">
+        <div className="absolute z-[100] mt-2 w-full min-w-[260px] max-h-64 overflow-y-auto bg-white border border-borderLine rounded-lg shadow-elevated p-2 grid grid-cols-1 gap-1 animate-fadeIn left-0">
+          <div className="text-[10px] font-semibold text-muted uppercase tracking-wider px-2 py-1 border-b border-borderLine/50 mb-1">
             Select Lucide Icon Symbol
           </div>
           {AVAILABLE_ICONS.map((item) => {
@@ -222,7 +222,7 @@ const IconDropdownSelector = ({ selectedIconName, onChange, color = '#126BEE' })
                   <IconComponent className="w-4 h-4 shrink-0" />
                 </div>
                 <div>
-                  <div className="text-xs font-extrabold">{item.name}</div>
+                  <div className="text-xs font-semibold">{item.name}</div>
                   <div className="text-[10px] text-muted font-normal">{item.label}</div>
                 </div>
               </button>
@@ -404,15 +404,15 @@ const ManageCategories = () => {
   return (
     <div className="space-y-8 animate-fadeIn pb-24 relative">
       {/* Header Banner with Create Button */}
-      <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-9 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-9 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-cyan/10 via-primaryBlue/5 to-transparent rounded-full blur-2xl pointer-events-none" />
         <div className="relative z-10 max-w-3xl">
           <div className="flex items-center gap-2 mb-2">
-            <span className="bg-[#EAF9FB] text-cyan text-xs font-extrabold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+            <span className="bg-[#EAF9FB] text-cyan text-xs font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
               <Activity className="w-3.5 h-3.5" /> Domain Orbits Engine
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-navy tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight">
             Manage Category Orbits & Subtopics
           </h1>
           <p className="text-sm font-medium text-muted mt-2 leading-relaxed">
@@ -422,7 +422,7 @@ const ManageCategories = () => {
 
         <button
           onClick={openNewCategoryModal}
-          className="btn-primary px-6 py-4 rounded-2xl font-extrabold text-xs flex items-center gap-2.5 shadow-lg hover:scale-[1.02] transition-transform relative z-10 whitespace-nowrap bg-primaryBlue"
+          className="btn-primary px-6 py-4 rounded-lg font-semibold text-xs flex items-center gap-2.5 shadow-lg hover:scale-[1.02] transition-transform relative z-10 whitespace-nowrap bg-primaryBlue"
         >
           <Plus className="w-5 h-5 stroke-[2.5]" />
           <span>Create New Category Orbit</span>
@@ -432,7 +432,7 @@ const ManageCategories = () => {
       {/* Category Orbits Grid with Subtopic Manager Popups */}
       <div className="space-y-5">
         <div className="flex items-center justify-between border-b border-borderLine pb-3">
-          <h2 className="text-lg font-black text-navy flex items-center gap-2">
+          <h2 className="text-lg font-bold text-navy flex items-center gap-2">
             <Layers className="w-5 h-5 text-primaryBlue" />
             <span>Active Domain Categories ({categories.length})</span>
           </h2>
@@ -456,7 +456,7 @@ const ManageCategories = () => {
               <div
                 key={cat._id}
                 style={{ borderTopColor: cat.color || '#126BEE' }}
-                className="bg-white border border-borderLine border-t-[8px] rounded-3xl p-6 shadow-soft hover:shadow-elevated transition-all flex flex-col justify-between"
+                className="bg-white border border-borderLine border-t-[8px] rounded-xl p-6 shadow-soft hover:shadow-elevated transition-all flex flex-col justify-between"
               >
                 <div>
                   {/* Card Header */}
@@ -464,15 +464,15 @@ const ManageCategories = () => {
                     <div className="flex items-center gap-3.5">
                       <div
                         style={{ backgroundColor: `${cat.color || '#126BEE'}15`, color: cat.color || '#126BEE' }}
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center border border-current/20 shadow-xs shrink-0"
+                        className="w-12 h-12 rounded-lg flex items-center justify-center border border-current/20 shadow-xs shrink-0"
                       >
                         <CatIconComp className="w-6 h-6" />
                       </div>
                       <div>
-                        <span style={{ backgroundColor: `${cat.color || '#126BEE'}15`, color: cat.color || '#126BEE' }} className="text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        <span style={{ backgroundColor: `${cat.color || '#126BEE'}15`, color: cat.color || '#126BEE' }} className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
                           Order #{cat.displayOrder || idx + 1}
                         </span>
-                        <h3 className="text-lg font-black text-navy mt-1.5 leading-tight">{cat.name}</h3>
+                        <h3 className="text-lg font-bold text-navy mt-1.5 leading-tight">{cat.name}</h3>
                       </div>
                     </div>
 
@@ -503,13 +503,13 @@ const ManageCategories = () => {
                 {/* Attached Subtopics Section */}
                 <div className="pt-4 border-t border-borderLine space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-navy flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-navy flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color || '#126BEE' }} />
                       <span>Subtopics ({catSubtopics.length})</span>
                     </span>
                     <button
                       onClick={() => openAddSubtopicModal(cat)}
-                      className="px-3 py-1.5 rounded-xl bg-[#EAF7ED] hover:bg-[#D5EEDC] text-medicalGreen font-black text-[11px] flex items-center gap-1 transition-all border border-medicalGreen/20 shadow-xs"
+                      className="px-3 py-1.5 rounded-xl bg-[#EAF7ED] hover:bg-[#D5EEDC] text-medicalGreen font-bold text-[11px] flex items-center gap-1 transition-all border border-medicalGreen/20 shadow-xs"
                     >
                       <Plus className="w-3.5 h-3.5 stroke-[3]" />
                       <span>Add Subtopic</span>
@@ -525,19 +525,19 @@ const ManageCategories = () => {
                       });
 
                       return (
-                        <div key={sub._id} className="p-2 bg-secondaryBg rounded-2xl border border-borderLine space-y-1.5">
+                        <div key={sub._id} className="p-2 bg-secondaryBg rounded-lg border border-borderLine space-y-1.5">
                           <div className="flex items-center justify-between p-1.5 rounded-xl hover:bg-white transition-colors group">
                             <div className="flex items-center gap-2.5 overflow-hidden">
                               <div style={{ color: sub.color || cat.color || '#126BEE' }} className="shrink-0">
                                 <SubIconComp className="w-4 h-4" />
                               </div>
-                              <span className="text-xs font-extrabold text-navy truncate">{sub.title}</span>
+                              <span className="text-xs font-semibold text-navy truncate">{sub.title}</span>
                             </div>
 
                             <div className="flex items-center gap-1 shrink-0">
                               <button
                                 onClick={() => openAddLevel3Modal(sub, cat)}
-                                className="px-2 py-1 rounded-lg bg-[#E9F2FF] hover:bg-primaryBlue text-primaryBlue hover:text-white font-extrabold text-[10px] flex items-center gap-1 transition-all shadow-xs"
+                                className="px-2 py-1 rounded-lg bg-[#E9F2FF] hover:bg-primaryBlue text-primaryBlue hover:text-white font-semibold text-[10px] flex items-center gap-1 transition-all shadow-xs"
                                 title="Add Sub-Subtopic under this Subtopic"
                               >
                                 <Plus className="w-3 h-3 stroke-[3]" />
@@ -568,7 +568,7 @@ const ManageCategories = () => {
                                 return (
                                   <div key={child._id} className="flex items-center justify-between p-2 bg-white rounded-xl border border-borderLine shadow-xs hover:border-primaryBlue/40 transition-colors">
                                     <div className="flex items-center gap-2 overflow-hidden">
-                                      <span className="text-primaryBlue font-black text-xs">└</span>
+                                      <span className="text-primaryBlue font-bold text-xs">└</span>
                                       <div style={{ color: child.color || '#8B5CF6' }} className="shrink-0">
                                         <ChildIconComp className="w-3.5 h-3.5" />
                                       </div>
@@ -614,7 +614,7 @@ const ManageCategories = () => {
       {/* ======================= MODAL 1: CATEGORY ORBIT POPUP DIALOG ======================= */}
       {isCatModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-elevated max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-8 shadow-elevated max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
             <button
               onClick={() => setIsCatModalOpen(false)}
               className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondaryBg text-muted hover:text-navy transition-colors"
@@ -627,7 +627,7 @@ const ManageCategories = () => {
                 <Edit className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg md:text-xl font-black text-navy">
+                <h3 className="text-lg md:text-xl font-bold text-navy">
                   {editingId ? 'Edit Category Orbit' : 'Create New Category Orbit'}
                 </h3>
                 <p className="text-xs text-muted font-medium">Updates immediately appear across all student mind map branches.</p>
@@ -644,7 +644,7 @@ const ManageCategories = () => {
                     placeholder="e.g., General Psychiatry"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-primaryBlue"
                   />
                 </div>
 
@@ -664,7 +664,7 @@ const ManageCategories = () => {
                   <select
                     value={form.color}
                     onChange={(e) => setForm({ ...form, color: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-black text-sm text-navy outline-none focus:border-primaryBlue"
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-bold text-sm text-navy outline-none focus:border-primaryBlue"
                   >
                     <option value="#126BEE">🔵 Royal Blue (#126BEE)</option>
                     <option value="#21A447">🟢 Medical Green (#21A447)</option>
@@ -683,7 +683,7 @@ const ManageCategories = () => {
                     placeholder="1"
                     value={form.displayOrder}
                     onChange={(e) => setForm({ ...form, displayOrder: parseInt(e.target.value) || 1 })}
-                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-black text-sm text-navy outline-none focus:border-primaryBlue"
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-bold text-sm text-navy outline-none focus:border-primaryBlue"
                   />
                 </div>
               </div>
@@ -720,7 +720,7 @@ const ManageCategories = () => {
       {/* ======================= MODAL 2: SUBTOPIC NODE POPUP DIALOG ======================= */}
       {isSubModalOpen && selectedParentCat && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-elevated max-w-xl w-full max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-8 shadow-elevated max-w-xl w-full max-h-[90vh] overflow-y-auto relative">
             <button
               onClick={() => setIsSubModalOpen(false)}
               className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondaryBg text-muted hover:text-navy transition-colors"
@@ -731,12 +731,12 @@ const ManageCategories = () => {
             <div className="flex items-center gap-3 mb-6 border-b border-borderLine pb-4">
               <div
                 style={{ backgroundColor: `${selectedParentCat.color}20`, color: selectedParentCat.color }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center font-black border border-current/20"
+                className="w-10 h-10 rounded-xl flex items-center justify-center font-bold border border-current/20"
               >
                 <FolderPlus className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-navy">
+                <h3 className="text-lg font-bold text-navy">
                   {editingSubId ? `Edit Subtopic Node in "${selectedParentCat.name}"` : `Attach Subtopic to "${selectedParentCat.name}"`}
                 </h3>
                 <p className="text-xs text-muted font-medium">This node will render dynamically on Screen 2 Subtopic Trees.</p>
@@ -752,7 +752,7 @@ const ManageCategories = () => {
                   placeholder="e.g., Autism Spectrum Disorder"
                   value={subForm.title}
                   onChange={(e) => setSubForm({ ...subForm, title: e.target.value })}
-                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-medicalGreen"
+                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-medicalGreen"
                 />
               </div>
 
@@ -773,7 +773,7 @@ const ManageCategories = () => {
                     placeholder="1"
                     value={subForm.displayOrder}
                     onChange={(e) => setSubForm({ ...subForm, displayOrder: parseInt(e.target.value) || 1 })}
-                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-black text-sm text-navy outline-none focus:border-medicalGreen"
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-bold text-sm text-navy outline-none focus:border-medicalGreen"
                   />
                 </div>
               </div>

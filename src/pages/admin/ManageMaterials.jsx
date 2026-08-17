@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, Upload, Trash2, Video, File, Save, CheckCircle, Edit, HelpCircle, Sparkles, Plus, Layers, Play, BookOpen, CheckCircle2, Search, Filter, X, Table, PlusCircle, RotateCcw, Eye } from 'lucide-react';
+import { FileText, Upload, Trash2, Video, File, Save, CheckCircle, Edit, HelpCircle, Sparkles, Plus, Layers, Play, BookOpen, CheckCircle2, Search, Filter, X, Table, PlusCircle, RotateCcw, Eye, MessageCircle } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,21 @@ const getFileUrl = (url) => {
     return `${baseUrl.replace('/api', '')}${url}`;
   }
   return url;
+};
+
+const timeAgo = (date) => {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + " years ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + " months ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + " days ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + " hours ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + " minutes ago";
+  return Math.floor(seconds) + " seconds ago";
 };
 
 const ManageMaterials = () => {
@@ -37,6 +52,7 @@ const ManageMaterials = () => {
   const [selectedMatSubSubtopic, setSelectedMatSubSubtopic] = useState('');
   const [previewMaterial, setPreviewMaterial] = useState(null);
   const [matTypeTab, setMatTypeTab] = useState('ALL');
+  const [viewingCommentsForMaterial, setViewingCommentsForMaterial] = useState(null);
 
   // MCQs state
   const [mcqForm, setMcqForm] = useState({ topic: '', question: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'C', difficulty: 'Medium', explanation: '' });
@@ -125,6 +141,13 @@ const ManageMaterials = () => {
     staleTime: 30 * 1000,
   });
   const mcqs = useMemo(() => mcqData?.mcqs || [], [mcqData]);
+
+  const { data: commentsData } = useQuery({
+    queryKey: ['materialComments', viewingCommentsForMaterial?._id],
+    queryFn: () => api.get(`/comments/material/${viewingCommentsForMaterial._id}`),
+    enabled: !!viewingCommentsForMaterial,
+  });
+  const materialComments = useMemo(() => commentsData?.data || [], [commentsData]);
 
   // Populate form when navigating to edit from the library tables via router state
   useEffect(() => {
@@ -293,13 +316,13 @@ const ManageMaterials = () => {
   }, [mcqs, filterSubject, filterTopic, filterSubtopic, filterSubSubtopic, searchQuery, topics, categories]);
 
   const renderFilterDashboard = (colorClass = 'text-primaryBlue', borderClass = 'focus:border-primaryBlue', isMcq = false) => (
-    <div className="bg-white border border-borderLine rounded-3xl p-6 lg:p-7 shadow-soft space-y-4 mb-6">
+    <div className="bg-white border border-borderLine rounded-xl p-6 lg:p-7 shadow-soft space-y-4 mb-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-borderLine pb-4">
-        <div className="flex items-center gap-2 font-black text-navy text-base">
+        <div className="flex items-center gap-2 font-bold text-navy text-base">
           <Filter className={`w-5 h-5 ${colorClass}`} />
           <span>Filter {isMcq ? 'Question Bank' : 'Study Materials'} & Advanced Search</span>
           {(filterSubject || filterTopic || filterSubtopic || filterSubSubtopic || searchQuery) && (
-            <span className={isMcq ? 'bg-[#EAF7ED] text-medicalGreen text-xs font-extrabold px-3 py-0.5 rounded-full' : 'bg-[#E9F2FF] text-primaryBlue text-xs font-extrabold px-3 py-0.5 rounded-full'}>
+            <span className={isMcq ? 'bg-[#EAF7ED] text-medicalGreen text-xs font-semibold px-3 py-0.5 rounded-full' : 'bg-[#E9F2FF] text-primaryBlue text-xs font-semibold px-3 py-0.5 rounded-full'}>
               Filters Active
             </span>
           )}
@@ -334,7 +357,7 @@ const ManageMaterials = () => {
                 setFilterSubSubtopic('');
                 setSearchQuery('');
               }}
-              className="px-3.5 py-2 rounded-xl bg-secondaryBg hover:bg-[#FFF2F2] text-muted hover:text-[#DC2626] border border-borderLine text-xs font-extrabold flex items-center gap-1.5 transition-all whitespace-nowrap"
+              className="px-3.5 py-2 rounded-xl bg-secondaryBg hover:bg-[#FFF2F2] text-muted hover:text-[#DC2626] border border-borderLine text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Filters</span>
@@ -345,7 +368,7 @@ const ManageMaterials = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="block text-[11px] font-extrabold text-muted uppercase tracking-wider mb-1.5">Filter by Subject</label>
+          <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Filter by Subject</label>
           <select
             value={filterSubject}
             onChange={(e) => {
@@ -364,7 +387,7 @@ const ManageMaterials = () => {
         </div>
 
         <div>
-          <label className="block text-[11px] font-extrabold text-muted uppercase tracking-wider mb-1.5">Filter by Topic</label>
+          <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Filter by Topic</label>
           <select
             value={filterTopic}
             onChange={(e) => {
@@ -383,7 +406,7 @@ const ManageMaterials = () => {
         </div>
 
         <div>
-          <label className="block text-[11px] font-extrabold text-muted uppercase tracking-wider mb-1.5">Filter by Subtopic</label>
+          <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Filter by Subtopic</label>
           <select
             value={filterSubtopic}
             onChange={(e) => {
@@ -401,7 +424,7 @@ const ManageMaterials = () => {
         </div>
 
         <div>
-          <label className="block text-[11px] font-extrabold text-muted uppercase tracking-wider mb-1.5">Filter by Subtopic's Subtopic</label>
+          <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">Filter by Subtopic's Subtopic</label>
           <select
             value={filterSubSubtopic}
             onChange={(e) => setFilterSubSubtopic(e.target.value)}
@@ -608,15 +631,15 @@ const ManageMaterials = () => {
   return (
     <div className="space-y-8 animate-fadeIn pb-20">
       {/* Hero Header & Mode Switcher */}
-      <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-9 shadow-soft flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-9 shadow-soft flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-medicalPurple/5 via-primaryBlue/5 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-2">
-            <span className="bg-[#EAE5FF] text-[#7435D5] text-xs font-extrabold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+            <span className="bg-[#EAE5FF] text-[#7435D5] text-xs font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
               <Sparkles className="w-3.5 h-3.5" /> Content & Assessment Hub
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-navy tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight">
             {(activeTab === 'UPLOAD_MATERIALS' || activeTab === 'TABLE_MATERIALS' || activeTab === 'MATERIALS') 
               ? 'Manage Videos & Study Materials' 
               : 'Manage Practice MCQs & Board Quizzes'}
@@ -633,22 +656,22 @@ const ManageMaterials = () => {
       {(activeTab === 'UPLOAD_MATERIALS' || activeTab === 'MATERIALS') && (
         <div className="space-y-6">
           {/* Material Editor Form */}
-          <form onSubmit={saveMaterial} className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft space-y-5 relative">
+          <form onSubmit={saveMaterial} className="bg-white border border-borderLine rounded-xl p-7 lg:p-8 shadow-soft space-y-5 relative">
             <div className="flex items-center justify-between mb-4 border-b border-borderLine pb-4">
-              <h2 className="text-lg md:text-xl font-black text-navy flex items-center gap-2.5">
+              <h2 className="text-lg md:text-xl font-bold text-navy flex items-center gap-2.5">
                 <Edit className="w-5 h-5 text-primaryBlue" />
                 <span>{editingMatId ? `Edit Material: "${matForm.title}"` : 'Upload New Study Module or Lecture Video'}</span>
               </h2>
               {editingMatId && (
-                <span className="bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full">
+                <span className="bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full">
                   Editing Active Material
                 </span>
               )}
             </div>
 
             {/* 4-Tier Cascading Curriculum Selection */}
-            <div className="bg-[#EAF2FC]/60 p-5 rounded-2xl border border-primaryBlue/20 space-y-4 mb-3">
-              <div className="text-xs font-black text-primaryBlue uppercase tracking-wider flex items-center gap-1.5">
+            <div className="bg-[#EAF2FC]/60 p-5 rounded-lg border border-primaryBlue/20 space-y-4 mb-3">
+              <div className="text-xs font-bold text-primaryBlue uppercase tracking-wider flex items-center gap-1.5">
                 <Layers className="w-4 h-4" />
                 <span>Step 1: Select Target Subject, Topic, Subtopic & Sub-Subtopic</span>
               </div>
@@ -664,7 +687,7 @@ const ManageMaterials = () => {
                       setSelectedMatSubSubtopic('');
                       setMatForm({ ...matForm, topic: '' });
                     }}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue shadow-xs"
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-semibold text-sm text-navy outline-none focus:border-primaryBlue shadow-xs"
                   >
                     <option value="">1. Select Subject</option>
                     {subjects.map((sub) => (
@@ -684,7 +707,7 @@ const ManageMaterials = () => {
                       setMatForm({ ...matForm, topic: '' });
                     }}
                     disabled={!selectedMatSubject && categories.length > 0}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-semibold text-sm text-navy outline-none focus:border-primaryBlue shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">2. Select Topic</option>
                     {matAvailableTopics.map((cat) => (
@@ -705,7 +728,7 @@ const ManageMaterials = () => {
                     }}
                     required
                     disabled={!selectedMatCategory && topics.length > 0}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-black text-sm text-primaryBlue outline-none focus:border-primaryBlue shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-bold text-sm text-primaryBlue outline-none focus:border-primaryBlue shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">3. Select Subtopic</option>
                     {matAvailableSubtopics.map((t) => (
@@ -718,7 +741,7 @@ const ManageMaterials = () => {
                   <label className="block text-xs font-bold text-navy mb-1.5 flex items-center justify-between">
                     <span>4. Subtopic's Subtopic</span>
                     {matAvailableSubSubtopics.length > 0 && (
-                      <span className="text-[10px] text-primaryBlue font-extrabold bg-blue-100 px-1.5 py-0.5 rounded">Optional</span>
+                      <span className="text-[10px] text-primaryBlue font-semibold bg-blue-100 px-1.5 py-0.5 rounded">Optional</span>
                     )}
                   </label>
                   <select
@@ -729,7 +752,7 @@ const ManageMaterials = () => {
                       setMatForm({ ...matForm, topic: val || selectedMatSubtopic });
                     }}
                     disabled={!selectedMatSubtopic || matAvailableSubSubtopics.length === 0}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-black text-sm text-purple-700 outline-none focus:border-purple-600 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-bold text-sm text-purple-700 outline-none focus:border-purple-600 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">
                       {!selectedMatSubtopic 
@@ -751,7 +774,7 @@ const ManageMaterials = () => {
               <select
                 value={matForm.type}
                 onChange={(e) => setMatForm({ ...matForm, type: e.target.value })}
-                className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
+                className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-primaryBlue"
               >
                 <option value="VIDEO">Video Upload</option>
                 <option value="PDF">Document Upload</option>
@@ -766,7 +789,7 @@ const ManageMaterials = () => {
                 required
                 value={matForm.title}
                 onChange={(e) => setMatForm({ ...matForm, title: e.target.value })}
-                className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-primaryBlue"
+                className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-primaryBlue"
               />
             </div>
 
@@ -782,8 +805,8 @@ const ManageMaterials = () => {
             </div>
 
             {matForm.type === 'VIDEO' ? (
-              <div className="bg-[#FFF5F5] p-5 rounded-2xl border border-red-200/60 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-extrabold text-red-600 uppercase tracking-wider">
+              <div className="bg-[#FFF5F5] p-5 rounded-lg border border-red-200/60 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-red-600 uppercase tracking-wider">
                   <Video className="w-4 h-4" />
                   <span>Upload Video Lecture</span>
                 </div>
@@ -818,8 +841,8 @@ const ManageMaterials = () => {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3 bg-secondaryBg/60 p-5 rounded-2xl border border-borderLine">
-                <div className="flex items-center gap-2 text-xs font-extrabold text-primaryBlue uppercase tracking-wider">
+              <div className="space-y-3 bg-secondaryBg/60 p-5 rounded-lg border border-borderLine">
+                <div className="flex items-center gap-2 text-xs font-semibold text-primaryBlue uppercase tracking-wider">
                   <File className="w-4 h-4" />
                   <span>Upload Document</span>
                 </div>
@@ -876,9 +899,9 @@ const ManageMaterials = () => {
           {renderFilterDashboard('text-primaryBlue', 'focus:border-primaryBlue', false)}
 
           {/* Materials List Table */}
-          <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft overflow-x-auto">
+          <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-8 shadow-soft overflow-x-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
-              <h3 className="text-lg font-black text-navy flex items-center gap-2">
+              <h3 className="text-lg font-bold text-navy flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#7435D5]" />
                 <span>Published Study Materials & Lectures ({filteredMaterials.length}{filteredMaterials.length !== materials.length ? ` of ${materials.length}` : ''})</span>
               </h3>
@@ -906,7 +929,7 @@ const ManageMaterials = () => {
             </div>
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-borderLine text-[11px] font-extrabold text-muted uppercase tracking-wider">
+                <tr className="border-b border-borderLine text-[11px] font-semibold text-muted uppercase tracking-wider">
                   <th className="py-3.5 px-4">Material Title</th>
                   <th className="py-3.5 px-4">Type</th>
                   <th className="py-3.5 px-4">Associated Lesson</th>
@@ -917,7 +940,7 @@ const ManageMaterials = () => {
               <tbody className="divide-y divide-borderLine/50 text-sm font-semibold text-navy">
                 {filteredMaterials.map((m) => (
                   <tr key={m._id} className="hover:bg-secondaryBg/80 transition-colors group">
-                    <td className="py-4 px-4 font-black flex items-center gap-3">
+                    <td className="py-4 px-4 font-bold flex items-center gap-3">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                         m.type === 'VIDEO' ? 'bg-[#EAE5FF] text-[#7435D5]' :
                         m.type === 'NOTES' ? 'bg-[#E9F2FF] text-primaryBlue' : 'bg-[#EAF7ED] text-medicalGreen'
@@ -930,14 +953,14 @@ const ManageMaterials = () => {
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-extrabold ${
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         m.type === 'VIDEO' ? 'bg-[#EAE5FF] text-[#7435D5]' :
                         m.type === 'NOTES' ? 'bg-[#E9F2FF] text-primaryBlue' : 'bg-[#EAF7ED] text-medicalGreen'
                       }`}>
                         {m.type}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-xs font-extrabold text-muted">
+                    <td className="py-4 px-4 text-xs font-semibold text-muted">
                       <span className="bg-secondaryBg text-navy px-2.5 py-1 rounded-lg border border-borderLine">
                         🎯 {m.topic?.title || 'Unassigned'}
                       </span>
@@ -952,6 +975,15 @@ const ManageMaterials = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
+                        {m.type === 'VIDEO' && (
+                          <button
+                            onClick={() => setViewingCommentsForMaterial(m)}
+                            className="p-2 rounded-xl bg-secondaryBg hover:bg-white text-navy font-bold text-xs border border-borderLine shadow-xs hover:text-[#7435D5] transition-all"
+                            title="View Student Comments"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEditMat(m)}
                           className="p-2 rounded-xl bg-secondaryBg hover:bg-white text-navy font-bold text-xs border border-borderLine shadow-xs hover:text-primaryBlue transition-all"
@@ -988,22 +1020,22 @@ const ManageMaterials = () => {
       {/* ======================= TAB 3: CREATE PRACTICE MCQS FORM ======================= */}
       {(activeTab === 'UPLOAD_MCQS' || activeTab === 'MCQS') && (
         <div className="space-y-6">
-          <form onSubmit={saveMCQ} className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft space-y-5 relative">
+          <form onSubmit={saveMCQ} className="bg-white border border-borderLine rounded-xl p-7 lg:p-8 shadow-soft space-y-5 relative">
             <div className="flex items-center justify-between mb-4 border-b border-borderLine pb-4">
-              <h2 className="text-lg md:text-xl font-black text-navy flex items-center gap-2.5">
+              <h2 className="text-lg md:text-xl font-bold text-navy flex items-center gap-2.5">
                 <Edit className="w-5 h-5 text-medicalGreen" />
                 <span>{editingMcqId ? `Edit Practice MCQ (#${editingMcqId})` : 'Construct New Practice MCQ for Lesson Assessment'}</span>
               </h2>
               {editingMcqId && (
-                <span className="bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full">
+                <span className="bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full">
                   Editing Active Question
                 </span>
               )}
             </div>
 
             {/* 4-Tier Cascading Assessment Selection */}
-            <div className="bg-[#EDFAF3]/60 p-5 rounded-2xl border border-medicalGreen/20 space-y-4 mb-3">
-              <div className="text-xs font-black text-medicalGreen uppercase tracking-wider flex items-center gap-1.5">
+            <div className="bg-[#EDFAF3]/60 p-5 rounded-lg border border-medicalGreen/20 space-y-4 mb-3">
+              <div className="text-xs font-bold text-medicalGreen uppercase tracking-wider flex items-center gap-1.5">
                 <Layers className="w-4 h-4" />
                 <span>Step 1: Select Target Subject, Topic, Subtopic & Sub-Subtopic</span>
               </div>
@@ -1019,7 +1051,7 @@ const ManageMaterials = () => {
                       setSelectedMcqSubSubtopic('');
                       setMcqForm({ ...mcqForm, topic: '' });
                     }}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-medicalGreen shadow-xs"
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-semibold text-sm text-navy outline-none focus:border-medicalGreen shadow-xs"
                   >
                     <option value="">-- 1. Select Subject --</option>
                     {subjects.map((sub) => (
@@ -1039,7 +1071,7 @@ const ManageMaterials = () => {
                       setMcqForm({ ...mcqForm, topic: '' });
                     }}
                     disabled={!selectedMcqSubject && categories.length > 0}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-medicalGreen shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-semibold text-sm text-navy outline-none focus:border-medicalGreen shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">-- 2. Select Topic --</option>
                     {mcqAvailableTopics.map((cat) => (
@@ -1060,7 +1092,7 @@ const ManageMaterials = () => {
                     }}
                     required
                     disabled={!selectedMcqCategory && topics.length > 0}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-black text-sm text-medicalGreen outline-none focus:border-medicalGreen shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-bold text-sm text-medicalGreen outline-none focus:border-medicalGreen shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">-- 3. Select Subtopic --</option>
                     {mcqAvailableSubtopics.map((t) => (
@@ -1073,7 +1105,7 @@ const ManageMaterials = () => {
                   <label className="block text-xs font-bold text-navy mb-1.5 flex items-center justify-between">
                     <span>4. Subtopic's Subtopic</span>
                     {mcqAvailableSubSubtopics.length > 0 && (
-                      <span className="text-[10px] text-medicalGreen font-extrabold bg-green-100 px-1.5 py-0.5 rounded">Optional</span>
+                      <span className="text-[10px] text-medicalGreen font-semibold bg-green-100 px-1.5 py-0.5 rounded">Optional</span>
                     )}
                   </label>
                   <select
@@ -1084,7 +1116,7 @@ const ManageMaterials = () => {
                       setMcqForm({ ...mcqForm, topic: val || selectedMcqSubtopic });
                     }}
                     disabled={!selectedMcqSubtopic || mcqAvailableSubSubtopics.length === 0}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-black text-sm text-purple-700 outline-none focus:border-purple-600 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-bold text-sm text-purple-700 outline-none focus:border-purple-600 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">
                       {!selectedMcqSubtopic 
@@ -1107,7 +1139,7 @@ const ManageMaterials = () => {
                 <select
                   value={mcqForm.correctAnswer}
                   onChange={(e) => setMcqForm({ ...mcqForm, correctAnswer: e.target.value })}
-                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-black text-sm text-medicalGreen outline-none focus:border-medicalGreen"
+                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-bold text-sm text-medicalGreen outline-none focus:border-medicalGreen"
                 >
                   <option value="A">Option A (Correct Answer)</option>
                   <option value="B">Option B (Correct Answer)</option>
@@ -1121,7 +1153,7 @@ const ManageMaterials = () => {
                 <select
                   value={mcqForm.difficulty}
                   onChange={(e) => setMcqForm({ ...mcqForm, difficulty: e.target.value })}
-                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-medicalGreen"
+                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-medicalGreen"
                 >
                   <option value="Easy">🟢 Easy (Foundational Core)</option>
                   <option value="Medium">🟡 Medium (Clinical Vignette)</option>
@@ -1138,11 +1170,11 @@ const ManageMaterials = () => {
                 placeholder="e.g., Which of the following typical or atypical psychotropic agents is formally indicated for..."
                 value={mcqForm.question}
                 onChange={(e) => setMcqForm({ ...mcqForm, question: e.target.value })}
-                className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-extrabold text-sm text-navy outline-none focus:border-medicalGreen resize-none"
+                className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-medicalGreen resize-none"
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-secondaryBg/40 p-5 rounded-2xl border border-borderLine">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-secondaryBg/40 p-5 rounded-lg border border-borderLine">
               <div>
                 <label className="block text-xs font-bold text-navy mb-1">Option A Text *</label>
                 <input
@@ -1226,14 +1258,14 @@ const ManageMaterials = () => {
           {renderFilterDashboard('text-medicalGreen', 'focus:border-medicalGreen', true)}
 
           {/* MCQs List Table */}
-          <div className="bg-white border border-borderLine rounded-3xl p-7 lg:p-8 shadow-soft overflow-x-auto">
-            <h3 className="text-lg font-black text-navy mb-5 flex items-center gap-2">
+          <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-8 shadow-soft overflow-x-auto">
+            <h3 className="text-lg font-bold text-navy mb-5 flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-medicalGreen" />
               <span>Question Bank ({filteredMCQs.length}{filteredMCQs.length !== mcqs.length ? ` of ${mcqs.length}` : ''} Practice MCQs)</span>
             </h3>
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-borderLine text-[11px] font-extrabold text-muted uppercase tracking-wider">
+                <tr className="border-b border-borderLine text-[11px] font-semibold text-muted uppercase tracking-wider">
                   <th className="py-3.5 px-4 w-1/2">Question Vignette & Rationale</th>
                   <th className="py-3.5 px-4">Correct Key</th>
                   <th className="py-3.5 px-4">Associated Lesson</th>
@@ -1248,18 +1280,18 @@ const ManageMaterials = () => {
                       <div className="text-navy group-hover:text-medicalGreen transition-colors">{q.question}</div>
                       <div className="text-[11px] text-muted font-normal line-clamp-1 mt-1">💡 <strong>Rationale:</strong> {q.explanation}</div>
                     </td>
-                    <td className="py-4 px-4 font-black">
-                      <span className="bg-[#EAF7ED] text-medicalGreen px-3 py-1 rounded-full text-xs font-black shadow-xs border border-medicalGreen/20">
+                    <td className="py-4 px-4 font-bold">
+                      <span className="bg-[#EAF7ED] text-medicalGreen px-3 py-1 rounded-full text-xs font-bold shadow-xs border border-medicalGreen/20">
                         Option {q.correctAnswer}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-xs font-extrabold text-muted">
+                    <td className="py-4 px-4 text-xs font-semibold text-muted">
                       <span className="bg-secondaryBg text-navy px-2.5 py-1 rounded-lg border border-borderLine">
                         🎯 {q.topic?.title || 'Unassigned'}
                       </span>
                     </td>
                     <td className="py-4 px-4 text-xs">
-                      <span className={`px-2.5 py-1 rounded-lg font-extrabold ${
+                      <span className={`px-2.5 py-1 rounded-lg font-semibold ${
                         q.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-700' :
                         q.difficulty === 'Medium' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'
                       }`}>
@@ -1303,9 +1335,9 @@ const ManageMaterials = () => {
       {/* ======================= MATERIAL PREVIEW MODAL ======================= */}
       {previewMaterial && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-navy/80 backdrop-blur-sm !mt-0">
-          <div className="relative w-full max-w-7xl h-[95vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
+          <div className="relative w-full max-w-7xl h-[95vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
             <div className="flex items-center justify-between px-6 py-4 border-b border-borderLine bg-[#F8FAFC]">
-              <h3 className="text-lg font-black text-navy flex items-center gap-2">
+              <h3 className="text-lg font-bold text-navy flex items-center gap-2">
                 {previewMaterial.type === 'VIDEO' ? <Video className="w-5 h-5 text-[#7435D5]" /> : <BookOpen className="w-5 h-5 text-primaryBlue" />}
                 Material Preview: <span className="font-bold text-muted">{previewMaterial.title}</span>
               </h3>
@@ -1348,6 +1380,65 @@ const ManageMaterials = () => {
               ) : (
                 <div className="flex items-center justify-center w-full h-full text-muted font-bold">
                   Preview not available
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+    {/* Video Comments Modal */}
+      {viewingCommentsForMaterial && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-elevated w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden relative">
+            <div className="p-6 md:p-8 border-b border-borderLine bg-secondaryBg/30 pr-16 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-navy flex items-center gap-2">
+                  <MessageCircle className="w-6 h-6 text-primaryBlue" />
+                  Student Feedback & Comments
+                </h2>
+                <p className="text-sm font-medium text-muted mt-1">
+                  Viewing private comments for: <span className="text-navy font-bold">{viewingCommentsForMaterial.title}</span>
+                </p>
+              </div>
+              <button 
+                onClick={() => setViewingCommentsForMaterial(null)} 
+                className="p-2 bg-white border border-borderLine rounded-full text-muted hover:text-navy hover:shadow-md transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-secondaryBg/10">
+              {materialComments.length === 0 ? (
+                <div className="text-center py-12 text-muted">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <h3 className="text-lg font-bold">No Comments Yet</h3>
+                  <p className="text-sm">Students haven't submitted any questions for this video.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {materialComments.map(comment => (
+                    <div key={comment._id} className="bg-white p-5 rounded-xl border border-borderLine shadow-sm flex gap-4">
+                      <div className="w-10 h-10 rounded-full bg-[#E9F2FF] text-primaryBlue font-bold flex items-center justify-center shrink-0">
+                        {comment.user?.firstName?.charAt(0) || 'U'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-1">
+                          <div>
+                            <span className="font-bold text-navy">{comment.user?.firstName} {comment.user?.lastName}</span>
+                            <span className="text-xs text-muted ml-2">{comment.user?.email}</span>
+                          </div>
+                          <span className="text-xs font-semibold text-muted">
+                            {timeAgo(comment.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-navy/90 font-medium whitespace-pre-wrap mt-2 leading-relaxed">
+                          {comment.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
