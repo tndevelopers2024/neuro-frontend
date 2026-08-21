@@ -6,6 +6,7 @@ import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import PDFFlipbook from '../../components/common/PDFFlipbook.jsx';
 import PDFStandardReader from '../../components/common/PDFStandardReader.jsx';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 
 const COLORS = [
   { id: 'yellow', value: '#FCD34D' },
@@ -181,12 +182,7 @@ const NoteReader = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
-        <Sparkles className="w-10 h-10 text-primaryBlue animate-spin" />
-        <span>Loading Clinical Note Synthesis...</span>
-      </div>
-    );
+    return <NeonBrainLoader text="Loading Clinical Note Synthesis..." />;
   }
 
   if (!material) {
@@ -229,7 +225,7 @@ const NoteReader = () => {
         <div className="w-full h-[1px] bg-borderLine my-6" />
 
         {/* Render Uploaded PDF/Image or Structured HTML Reading Content */}
-        {material.type === 'PDF' && material.fileUrl ? (
+        {(material.type === 'PDF' || material.type === 'NOTES') && material.fileUrl ? (
           <div ref={viewerRef} className={`w-full transition-all ${fullscreenMode ? 'h-screen bg-secondaryBg' : ''}`}>
             {material.fileUrl.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) ? (
               <div className="w-full h-[85vh] flex justify-center items-center p-4 bg-white relative rounded-lg overflow-hidden border border-borderLine shadow-inner">

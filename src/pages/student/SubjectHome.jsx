@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Brain, Sparkles, LayoutGrid, Network, ChevronRight, BookOpen, Clock, Activity, Flame, Award, Bookmark as BookmarkIcon, FileText, Search, X } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import api from '../../api/axiosInstance.js';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
 import MindMapContainer from '../../components/mindmap/MindMapContainer.jsx';
 
@@ -168,12 +169,7 @@ const SubjectHome = () => {
   }, [filteredCategories, openCategory, navigate]);
 
   if (isLoading && !subjectData) {
-    return (
-      <div className="p-8 text-center text-navy font-semibold flex flex-col items-center gap-4">
-        <Brain className="w-12 h-12 text-primaryBlue animate-bounce" />
-        <span className="text-lg">Hydrating Psychiatry Knowledge Map...</span>
-      </div>
-    );
+    return <NeonBrainLoader text="Hydrating Psychiatry Knowledge Map..." />;
   }
 
   return (

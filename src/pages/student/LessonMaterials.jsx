@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Play, FileText, HelpCircle, ArrowLeft, ArrowRight, Clock, Star, Download, CheckCircle2, ShieldAlert, Sparkles, Bookmark as BookmarkIcon, Layers, Video } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 import toast from 'react-hot-toast';
 
 const LessonMaterials = () => {
@@ -27,6 +28,7 @@ const LessonMaterials = () => {
     description: `Comprehensive clinical study module on ${formattedTitle} featuring HD lecture videos, structured study notes, and diagnostic clinical case questions.` 
   };
   const materials = materialData?.materials || [];
+  const childTopics = materialData?.childTopics || [];
   const navigation = materialData?.navigation || {};
   const breadcrumbs = materialData?.breadcrumbs || [
     { title: 'Home', link: '/' },
@@ -64,12 +66,7 @@ const LessonMaterials = () => {
   };
 
   if (isLoading && !materialData) {
-    return (
-      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
-        <Clock className="w-10 h-10 text-primaryBlue animate-spin" />
-        <span>Loading Lesson Materials for {topic.title}...</span>
-      </div>
-    );
+    return <NeonBrainLoader text={`Loading Lesson Materials for ${topic.title}...`} />;
   }
 
   return (
@@ -104,6 +101,41 @@ const LessonMaterials = () => {
           </button>
         </div>
       </div>
+
+      {/* Level 3 Subtopics / Lesson Modules */}
+      {childTopics.length > 0 && (
+        <div className="mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-navy mb-4 flex items-center gap-2">
+            <Layers className="w-6 h-6 text-primaryBlue" />
+            Subtopic Modules
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {childTopics.map(child => (
+              <div 
+                key={child._id}
+                onClick={() => navigate(`/lesson/${child.slug}`)}
+                className="bg-white border border-borderLine rounded-xl p-6 shadow-soft hover:shadow-elevated hover:border-primaryBlue transition-all cursor-pointer flex flex-col justify-between group"
+              >
+                <div className="flex items-start gap-4 mb-3">
+                  <div style={{ backgroundColor: `${child.color || '#126BEE'}15`, color: child.color || '#126BEE' }} className="p-3 rounded-xl shrink-0 group-hover:scale-110 transition-transform">
+                    <Layers className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-navy group-hover:text-primaryBlue transition-colors">{child.title}</h3>
+                  </div>
+                </div>
+                <p className="text-sm font-medium text-muted line-clamp-2">
+                  {child.description || 'Explore clinical videos, structured notes, and assessment questions for this specific subtopic.'}
+                </p>
+                <div className="mt-5 pt-4 border-t border-borderLine flex items-center justify-between text-xs font-semibold text-primaryBlue">
+                  <span>Enter Module</span>
+                  <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 3 Main Interactive Learning Cards (Screen 4 Reference) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-7">

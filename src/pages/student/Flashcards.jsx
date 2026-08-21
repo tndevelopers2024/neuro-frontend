@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Layers, ArrowLeft, ArrowRight, RotateCw, Sparkles, Shuffle } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 
 const Flashcards = () => {
   const { topicSlug = 'all' } = useParams();
@@ -54,12 +55,7 @@ const Flashcards = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
-        <Layers className="w-10 h-10 text-primaryBlue animate-bounce" />
-        <span>Loading Flashcard Memory Decks...</span>
-      </div>
-    );
+    return <NeonBrainLoader text="Loading Flashcard Memory Decks..." />;
   }
 
   if (!flashcards || flashcards.length === 0) {

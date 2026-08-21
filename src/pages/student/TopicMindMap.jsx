@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Brain, Puzzle, Network, LayoutGrid, Sparkles, Clock, BookOpen, UserCheck, Globe, Dna, ClipboardCheck, Users, Microscope, FileText, Pill, HeartHandshake, TrendingUp, Rocket, Star, ArrowLeft } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import api from '../../api/axiosInstance.js';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
 import MindMapContainer from '../../components/mindmap/MindMapContainer.jsx';
 
@@ -54,15 +55,7 @@ const TopicMindMap = () => {
     const palette = ['#8B5CF6', '#10B981', '#06B6D4', '#F97316', '#22C55E', '#3B82F6', '#EA580C', '#E11D48', '#0D9488'];
 
     if (apiChildren.length === 0) {
-      return [{
-        _id: `module-${slug || topic._id}`,
-        title: `${topic.title || 'Lesson'} - Videos, Study Materials & MCQs`,
-        slug: slug,
-        badge: 1,
-        icon: 'BookOpen',
-        color: '#8B5CF6',
-        description: 'Click to enter and access all video lectures, reading materials, and practice MCQs for this module.',
-      }];
+      return [];
     }
 
     return apiChildren.map((c, idx) => ({
@@ -84,7 +77,7 @@ const TopicMindMap = () => {
       data: {
         label: (topic.shortCode || topic.title || 'Topic').slice(0, 6).toUpperCase(),
         subLabel: (topic.title || 'Topic').toUpperCase(),
-        slogan: 'Select any lesson module below.',
+        slogan: lessons.length === 0 ? 'No sub subtopics' : 'Select any lesson module below.',
         icon: 'Puzzle',
         color: topic.color || '#126BEE',
       },
@@ -137,12 +130,7 @@ const TopicMindMap = () => {
   }, [lessons, topic, slug, navigate]);
 
   if (isLoading && !topicData) {
-    return (
-      <div className="p-8 text-center font-semibold text-navy flex flex-col items-center gap-4">
-        <Puzzle className="w-12 h-12 text-primaryBlue animate-bounce" />
-        <span className="text-lg">Loading Topic Starburst Chart...</span>
-      </div>
-    );
+    return <NeonBrainLoader text="Loading Topic Starburst Chart..." />;
   }
 
   return (
@@ -221,8 +209,13 @@ const TopicMindMap = () => {
       ) : (
         /* Grid Display of Lesson Modules */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {lessons.map((item, idx) => {
-            const IconComp = Icons[item.icon || 'BookOpen'] || Icons.BookOpen;
+          {lessons.length === 0 ? (
+            <div className="col-span-full py-12 text-center text-muted text-sm font-semibold">
+              No sub subtopics
+            </div>
+          ) : (
+            lessons.map((item, idx) => {
+              const IconComp = Icons[item.icon || 'BookOpen'] || Icons.BookOpen;
             return (
               <div
                 key={item._id}
@@ -259,7 +252,7 @@ const TopicMindMap = () => {
                 </div>
               </div>
             );
-          })}
+          }))}
         </div>
       )}
     </div>

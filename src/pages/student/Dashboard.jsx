@@ -5,6 +5,7 @@ import { LayoutDashboard, Flame, Award, Clock, ArrowRight, Brain, FileText, Book
 import api from '../../api/axiosInstance.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -36,6 +37,10 @@ const Dashboard = () => {
       seenActivity.add(key);
       activityList.push(item);
     }
+  }
+
+  if (isLoading) {
+    return <NeonBrainLoader text="Loading Dashboard..." />;
   }
 
   return (

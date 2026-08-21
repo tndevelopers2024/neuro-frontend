@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Play, FileText, Clock, ArrowLeft, ArrowRight, Layers, Download, Sparkles, Video, BookOpen, CheckCircle2 } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 
 const MaterialPlaylist = () => {
   const { type, topicSlug } = useParams();
@@ -48,12 +49,7 @@ const MaterialPlaylist = () => {
   ];
 
   if (isLoading && !materialData) {
-    return (
-      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
-        <Clock className="w-10 h-10 text-primaryBlue animate-spin" />
-        <span>Loading {isVideo ? 'Video Lectures' : 'Study Notes'} for {topic.title}...</span>
-      </div>
-    );
+    return <NeonBrainLoader text={`Loading ${isVideo ? 'Video Lectures' : 'Study Notes'} for ${topic.title}...`} />;
   }
 
   return (

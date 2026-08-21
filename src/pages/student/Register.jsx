@@ -41,7 +41,7 @@ const Register = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-navy uppercase tracking-wider mb-1.5">Full Name</label>
+            <label className="block text-xs font-bold text-navy text-left uppercase tracking-wider mb-1.5">Full Name</label>
             <div className="relative flex items-center">
               <User className="w-5 h-5 text-muted absolute left-3.5 pointer-events-none" />
               <input
@@ -56,7 +56,7 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-navy uppercase tracking-wider mb-1.5">Institutional Email</label>
+            <label className="block text-xs font-bold text-navy text-left uppercase tracking-wider mb-1.5">Institutional Email</label>
             <div className="relative flex items-center">
               <Mail className="w-5 h-5 text-muted absolute left-3.5 pointer-events-none" />
               <input
@@ -72,7 +72,7 @@ const Register = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-navy uppercase tracking-wider mb-1.5">Specialization</label>
+              <label className="block text-xs font-bold text-navy text-left uppercase tracking-wider mb-1.5">Specialization</label>
               <div className="relative flex items-center">
                 <Stethoscope className="w-5 h-5 text-muted absolute left-3.5 pointer-events-none" />
                 <input
@@ -85,7 +85,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-navy uppercase tracking-wider mb-1.5">Password</label>
+              <label className="block text-xs font-bold text-navy text-left uppercase tracking-wider mb-1.5">Password</label>
               <div className="relative flex items-center">
                 <Lock className="w-5 h-5 text-muted absolute left-3.5 pointer-events-none" />
                 <input

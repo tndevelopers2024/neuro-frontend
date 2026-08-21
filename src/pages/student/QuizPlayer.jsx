@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { HelpCircle, CheckCircle2, XCircle, ArrowLeft, ArrowRight, RotateCcw, Award, Sparkles } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 
 const QuizPlayer = () => {
   const { topicSlug = 'history-of-asd' } = useParams();
@@ -60,12 +61,7 @@ const QuizPlayer = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
-        <Sparkles className="w-10 h-10 text-medicalGreen animate-spin" />
-        <span>Loading Clinical Board Quizzes...</span>
-      </div>
-    );
+    return <NeonBrainLoader text="Loading Clinical Board Quizzes..." />;
   }
 
   if (!mcqs || mcqs.length === 0) {

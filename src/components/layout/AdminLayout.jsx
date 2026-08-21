@@ -19,17 +19,9 @@ const AdminLayout = () => {
       ]
     },
     {
-      title: 'STUDY MATERIALS',
+      title: 'USER MANAGEMENT',
       items: [
-        { name: 'Upload Material', path: '/admin/materials/upload', icon: PlusCircle },
-        { name: 'Materials Table', path: '/admin/materials/table', icon: Table },
-      ]
-    },
-    {
-      title: 'BOARD ASSESSMENTS',
-      items: [
-        { name: 'Create MCQ', path: '/admin/mcqs/create', icon: PlusCircle },
-        { name: 'MCQs Table', path: '/admin/mcqs/table', icon: Table },
+        { name: 'Resident Registry', path: '/admin/users', icon: Users },
       ]
     }
   ];

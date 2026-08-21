@@ -5,6 +5,7 @@ import { Bookmark as BookmarkIcon, Trash2, ArrowRight, Search, FileText, Play, B
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
+import { CardSkeleton } from '../../components/common/Skeleton.jsx';
 
 const Bookmarks = () => {
   const [filterType, setFilterType] = useState('All');
@@ -62,7 +63,15 @@ const Bookmarks = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((bm) => (
+        {isLoading ? (
+          Array(6).fill(0).map((_, i) => <CardSkeleton key={i} />)
+        ) : filtered.length === 0 ? (
+          <div className="col-span-full py-20 text-center text-muted font-semibold bg-white border border-borderLine rounded-xl">
+            <BookmarkIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            No bookmarks found.
+          </div>
+        ) : (
+          filtered.map((bm) => (
           <div key={bm._id} className="medical-card flex flex-col justify-between group relative">
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -89,7 +98,7 @@ const Bookmarks = () => {
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-        ))}
+        )))}
       </div>
     </div>
   );

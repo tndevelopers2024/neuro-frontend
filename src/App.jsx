@@ -28,8 +28,8 @@ import MyNotes from './pages/student/MyNotes.jsx';
 // Admin Management Portal
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import ManageCategories from './pages/admin/ManageCategories.jsx';
-import ManageTopics from './pages/admin/ManageTopics.jsx';
-import ManageMaterials from './pages/admin/ManageMaterials.jsx';
+// import ManageTopics from './pages/admin/ManageTopics.jsx'; // Unused, logic moved to ManageCategories
+import ManageUsers from './pages/admin/ManageUsers.jsx';
 
 const App = () => {
   return (
@@ -66,14 +66,9 @@ const App = () => {
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="categories" element={<ManageCategories />} />
-        <Route path="topics" element={<ManageTopics />} />
-        <Route path="materials/upload" element={<ManageMaterials />} />
-        <Route path="materials/table" element={<ManageMaterials />} />
-        <Route path="materials" element={<Navigate to="/admin/materials/table" replace />} />
+        {/* <Route path="topics" element={<ManageTopics />} /> */}
         <Route path="subjects" element={<ManageCategories />} />
-        <Route path="mcqs/create" element={<ManageMaterials />} />
-        <Route path="mcqs/table" element={<ManageMaterials />} />
-        <Route path="mcqs" element={<Navigate to="/admin/mcqs/table" replace />} />
+        <Route path="users" element={<ManageUsers />} />
       </Route>
 
       {/* Fallback routing */}

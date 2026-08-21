@@ -4,6 +4,7 @@ import { FileText, Plus, Trash2, Edit3, Save, Search, Sparkles, X, Eye } from 'l
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
+import { CardSkeleton } from '../../components/common/Skeleton.jsx';
 
 const MyNotes = () => {
   const [search, setSearch] = useState('');
@@ -124,7 +125,14 @@ const MyNotes = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredNotes.map((note) => (
+        {isLoading ? (
+          Array(4).fill(0).map((_, i) => <CardSkeleton key={i} />)
+        ) : filteredNotes.length === 0 ? (
+          <div className="col-span-full py-20 text-center text-muted font-semibold bg-white border border-borderLine rounded-xl">
+            No notes found.
+          </div>
+        ) : (
+          filteredNotes.map((note) => (
           <div key={note._id} className="bg-white border border-borderLine rounded-xl p-7 shadow-soft flex flex-col justify-between hover:shadow-md transition-shadow">
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -156,7 +164,7 @@ const MyNotes = () => {
               <span>Updated: {new Date(note.updatedAt || Date.now()).toLocaleDateString()}</span>
             </div>
           </div>
-        ))}
+        )))}
       </div>
 
       {/* View Note Modal */}

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Play, Pause, RotateCcw, RotateCw, CheckCircle, FileText, ArrowLeft, Send, Sparkles, Volume2, VolumeX, Maximize2, Video, Clock, Volume1, MessageCircle } from 'lucide-react';
+import { Play, Pause, RotateCcw, RotateCw, CheckCircle, FileText, ArrowLeft, Send, Sparkles, Volume2, VolumeX, Maximize2, Video, Clock, Volume1, MessageCircle, Settings, Check } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 
 const extractYouTubeId = (url = '') => {
   if (!url) return null;
@@ -40,6 +41,9 @@ const VideoPlayer = () => {
   const [videoDuration, setVideoDuration] = useState(0);
   const controlsTimeoutRef = useRef(null);
   const playerContainerRef = useRef(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [quality, setQuality] = useState('auto');
   const hasResumed = useRef(false);
 
   // Fetch material item details
@@ -136,6 +140,9 @@ const VideoPlayer = () => {
           autoplay: 1,
           modestbranding: 1,
           rel: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
           enablejsapi: 1,
           origin: window.location.origin,
           start: resumedTime > 3 ? Math.floor(resumedTime) : 0,
@@ -192,6 +199,20 @@ const VideoPlayer = () => {
     };
   }, [ytVideoId, isLoading]);
 
+  // High-frequency time sync for YouTube progress bar
+  useEffect(() => {
+    let timer;
+    if (isPlaying && ytVideoId && playerRef.current) {
+      timer = setInterval(() => {
+        if (typeof playerRef.current.getCurrentTime === 'function') {
+          setVideoCurrentTime(playerRef.current.getCurrentTime() || 0);
+          setVideoDuration(playerRef.current.getDuration() || 0);
+        }
+      }, 250);
+    }
+    return () => clearInterval(timer);
+  }, [isPlaying, ytVideoId]);
+
   // Periodic position syncing while playing & on page exit
   useEffect(() => {
     const interval = setInterval(() => {
@@ -247,12 +268,7 @@ const VideoPlayer = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3">
-        <Sparkles className="w-10 h-10 text-[#7435D5] animate-spin" />
-        <span>Loading Video Audio Player...</span>
-      </div>
-    );
+    return <NeonBrainLoader text="Loading Video Audio Player..." />;
   }
 
   return (
@@ -273,21 +289,34 @@ const VideoPlayer = () => {
         {/* Main Video Screen (2 cols) */}
         <div className="lg:col-span-2 space-y-5">
           <div className="bg-black rounded-xl overflow-hidden shadow-elevated border border-borderLine relative group aspect-video flex items-center justify-center">
-            {ytVideoId ? (
-              <div id="youtube-native-player" className="w-full h-full aspect-video border-0"></div>
-            ) : (
-              <div 
-                ref={playerContainerRef}
-                className="w-full h-full relative group bg-black"
-                onMouseMove={() => {
-                  setShowControls(true);
-                  if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-                  if (isPlaying) {
-                    controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
-                  }
-                }}
-                onMouseLeave={() => isPlaying && setShowControls(false)}
-              >
+            <div 
+              ref={playerContainerRef}
+              className="w-full h-full relative group bg-black"
+              onMouseMove={() => {
+                setShowControls(true);
+                if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+                if (isPlaying) {
+                  controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+                }
+              }}
+              onMouseLeave={() => isPlaying && setShowControls(false)}
+            >
+              {ytVideoId ? (
+                <>
+                  {/* YouTube iframe with pointer-events-none to prevent direct interaction */}
+                  <div id="youtube-native-player" className="w-full h-full aspect-video border-0 pointer-events-none"></div>
+                  {/* Invisible Shield Overlay to capture clicks */}
+                  <div 
+                    className="absolute inset-0 z-10 cursor-pointer"
+                    onClick={() => {
+                      if (playerRef.current && typeof playerRef.current.getPlayerState === 'function') {
+                        if (isPlaying) playerRef.current.pauseVideo();
+                        else playerRef.current.playVideo();
+                      }
+                    }}
+                  ></div>
+                </>
+              ) : (
                 <video
                   ref={videoRef}
                   src={material?.videoUrl}
@@ -315,105 +344,190 @@ const VideoPlayer = () => {
                       else videoRef.current.play();
                     }
                   }}
-                  className="w-full h-full object-contain cursor-pointer"
+                  className="w-full h-full object-contain cursor-pointer relative z-0"
                 />
+              )}
+              
+              {/* Custom Controls Overlay */}
+              <div className={`absolute bottom-0 left-0 right-0 p-4 pt-16 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300 flex flex-col gap-2 z-20 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
                 
-                {/* Custom Controls Overlay */}
-                <div className={`absolute bottom-0 left-0 right-0 p-4 pt-16 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300 flex flex-col gap-2 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
-                  
-                  {/* Progress Bar */}
+                {/* Progress Bar */}
+                <div 
+                  className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer relative group/progress"
+                  onClick={(e) => {
+                    if (!videoDuration) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const pos = (e.clientX - rect.left) / rect.width;
+                    const newTime = pos * videoDuration;
+                    
+                    if (ytVideoId && playerRef.current && typeof playerRef.current.seekTo === 'function') {
+                      playerRef.current.seekTo(newTime, true);
+                      setVideoCurrentTime(newTime);
+                    } else if (videoRef.current) {
+                      videoRef.current.currentTime = newTime;
+                    }
+                  }}
+                >
                   <div 
-                    className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer relative group/progress"
-                    onClick={(e) => {
-                      if (!videoRef.current || !videoDuration) return;
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const pos = (e.clientX - rect.left) / rect.width;
-                      videoRef.current.currentTime = pos * videoDuration;
-                    }}
-                  >
-                    <div 
-                      className="absolute top-0 left-0 bottom-0 bg-primaryBlue rounded-full"
-                      style={{ width: `${(videoCurrentTime / videoDuration) * 100 || 0}%` }}
-                    />
-                    <div 
-                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow blur-0 scale-0 group-hover/progress:scale-100 transition-transform origin-center"
-                      style={{ left: `calc(${(videoCurrentTime / videoDuration) * 100 || 0}% - 6px)` }}
-                    />
+                    className="absolute top-0 left-0 bottom-0 bg-primaryBlue rounded-full"
+                    style={{ width: `${(videoCurrentTime / videoDuration) * 100 || 0}%` }}
+                  />
+                  <div 
+                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow blur-0 scale-0 group-hover/progress:scale-100 transition-transform origin-center"
+                    style={{ left: `calc(${(videoCurrentTime / videoDuration) * 100 || 0}% - 6px)` }}
+                  />
+                </div>
+
+                {/* Controls Row */}
+                <div className="flex justify-between items-center mt-2">
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => {
+                        if (ytVideoId && playerRef.current && typeof playerRef.current.getPlayerState === 'function') {
+                          if (isPlaying) playerRef.current.pauseVideo();
+                          else playerRef.current.playVideo();
+                        } else if (videoRef.current) {
+                          if (isPlaying) videoRef.current.pause();
+                          else videoRef.current.play();
+                        }
+                      }}
+                      className="text-white hover:text-primaryBlue transition-colors focus:outline-none"
+                    >
+                      {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                    </button>
+                    
+                    {/* Volume Control */}
+                    <div className="flex items-center gap-2 group/volume">
+                      <button 
+                        onClick={() => {
+                          if (ytVideoId && playerRef.current && typeof playerRef.current.mute === 'function') {
+                            if (isMuted) {
+                              playerRef.current.unMute();
+                              setIsMuted(false);
+                            } else {
+                              playerRef.current.mute();
+                              setIsMuted(true);
+                            }
+                          } else if (videoRef.current) {
+                            videoRef.current.muted = !isMuted;
+                            setIsMuted(!isMuted);
+                          }
+                        }}
+                        className="text-white hover:text-primaryBlue transition-colors focus:outline-none"
+                      >
+                        {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : volume < 0.5 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                      </button>
+                      <input 
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={isMuted ? 0 : volume}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setVolume(val);
+                          if (val > 0) setIsMuted(false);
+                          
+                          if (ytVideoId && playerRef.current && typeof playerRef.current.setVolume === 'function') {
+                            playerRef.current.setVolume(val * 100);
+                            if (val === 0) playerRef.current.mute();
+                            else playerRef.current.unMute();
+                          } else if (videoRef.current) {
+                            videoRef.current.volume = val;
+                            videoRef.current.muted = (val === 0);
+                          }
+                        }}
+                        className="w-0 overflow-hidden group-hover/volume:w-20 transition-all duration-300 h-1.5 accent-primaryBlue cursor-pointer"
+                      />
+                    </div>
+
+                    <span className="text-white/90 text-xs font-semibold font-mono ml-2">
+                      {formatTime(videoCurrentTime)} / {formatTime(videoDuration)}
+                    </span>
                   </div>
 
-                  {/* Controls Row */}
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4">
+                    {/* Settings Menu */}
+                    <div className="relative">
                       <button 
-                        onClick={() => {
-                          if (videoRef.current) {
-                            if (isPlaying) videoRef.current.pause();
-                            else videoRef.current.play();
-                          }
-                        }}
+                        onClick={() => setShowSettings(!showSettings)}
                         className="text-white hover:text-primaryBlue transition-colors focus:outline-none"
                       >
-                        {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                        <Settings className="w-4 h-4" />
                       </button>
                       
-                      {/* Volume Control */}
-                      <div className="flex items-center gap-2 group/volume">
-                        <button 
-                          onClick={() => {
-                            if (videoRef.current) {
-                              videoRef.current.muted = !isMuted;
-                              setIsMuted(!isMuted);
-                            }
-                          }}
-                          className="text-white hover:text-primaryBlue transition-colors focus:outline-none"
-                        >
-                          {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : volume < 0.5 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        </button>
-                        <input 
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.05"
-                          value={isMuted ? 0 : volume}
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            setVolume(val);
-                            if (val > 0) setIsMuted(false);
-                            if (videoRef.current) {
-                              videoRef.current.volume = val;
-                              videoRef.current.muted = (val === 0);
-                            }
-                          }}
-                          className="w-0 overflow-hidden group-hover/volume:w-20 transition-all duration-300 h-1.5 accent-primaryBlue cursor-pointer"
-                        />
-                      </div>
-
-                      <span className="text-white/90 text-xs font-semibold font-mono ml-2">
-                        {formatTime(videoCurrentTime)} / {formatTime(videoDuration)}
-                      </span>
+                      {showSettings && (
+                        <div className="absolute bottom-full right-0 mb-4 bg-black/90 backdrop-blur-md rounded-lg border border-white/10 p-3 min-w-[200px] shadow-2xl z-50">
+                          
+                          {/* Playback Speed */}
+                          <div className="mb-3">
+                            <div className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-2 px-1">Playback Speed</div>
+                            <div className="grid grid-cols-4 gap-1">
+                              {[0.5, 1, 1.5, 2].map(speed => (
+                                <button
+                                  key={speed}
+                                  onClick={() => {
+                                    setPlaybackRate(speed);
+                                    if (ytVideoId && playerRef.current && typeof playerRef.current.setPlaybackRate === 'function') {
+                                      playerRef.current.setPlaybackRate(speed);
+                                    } else if (videoRef.current) {
+                                      videoRef.current.playbackRate = speed;
+                                    }
+                                  }}
+                                  className={`text-xs py-1.5 rounded font-semibold transition-colors ${playbackRate === speed ? 'bg-primaryBlue text-white' : 'text-white/80 hover:bg-white/10'}`}
+                                >
+                                  {speed}x
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Quality Options */}
+                          <div>
+                            <div className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-2 px-1">Quality</div>
+                            <div className="flex flex-col gap-0.5">
+                              {['hd1080', 'hd720', 'large', 'medium', 'auto'].map(q => (
+                                <button
+                                  key={q}
+                                  onClick={() => {
+                                    setQuality(q);
+                                    if (ytVideoId && playerRef.current && typeof playerRef.current.setPlaybackQuality === 'function') {
+                                      playerRef.current.setPlaybackQuality(q);
+                                    }
+                                    setShowSettings(false);
+                                  }}
+                                  className={`text-xs text-left px-2 py-1.5 rounded font-semibold transition-colors flex items-center justify-between ${quality === q ? 'text-primaryBlue bg-primaryBlue/10' : 'text-white/80 hover:bg-white/10'}`}
+                                >
+                                  <span>{q === 'hd1080' ? '1080p HD' : q === 'hd720' ? '720p HD' : q === 'large' ? '480p' : q === 'medium' ? '360p' : 'Auto'}</span>
+                                  {quality === q && <Check className="w-3 h-3" />}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      <button 
-                        onClick={() => {
-                          if (!playerContainerRef.current) return;
-                          if (!document.fullscreenElement) {
-                            playerContainerRef.current.requestFullscreen().catch(err => console.log(err));
-                            setIsFullscreen(true);
-                          } else {
-                            document.exitFullscreen();
-                            setIsFullscreen(false);
-                          }
-                        }}
-                        className="text-white hover:text-primaryBlue transition-colors focus:outline-none"
-                      >
-                        <Maximize2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <button 
+                      onClick={() => {
+                        if (!playerContainerRef.current) return;
+                        if (!document.fullscreenElement) {
+                          playerContainerRef.current.requestFullscreen().catch(err => console.log(err));
+                          setIsFullscreen(true);
+                        } else {
+                          document.exitFullscreen();
+                          setIsFullscreen(false);
+                        }
+                      }}
+                      className="text-white hover:text-primaryBlue transition-colors focus:outline-none"
+                    >
+                      <Maximize2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
 

@@ -30,7 +30,16 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('neuromind_user', JSON.stringify(data.user));
           }
         } catch (error) {
-          console.warn('Background auth sync encountered a delay or server restart. Preserving active session.');
+          // If the token is invalid/expired or user was deleted, clear the zombie session
+          if (error.success === false && error.message?.includes('Not authorized')) {
+            console.warn('Session invalid or expired. Logging out automatically.');
+            localStorage.removeItem('neuromind_token');
+            localStorage.removeItem('neuromind_user');
+            setUser(null);
+            setToken(null);
+          } else {
+            console.warn('Background auth sync encountered a delay. Preserving active session.');
+          }
         }
       }
       setLoading(false);

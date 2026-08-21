@@ -5,6 +5,7 @@ import { Brain, Network, LayoutGrid, ChevronRight, Sparkles, BookOpen, Puzzle, A
 import * as Icons from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
+import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 import MindMapContainer from '../../components/mindmap/MindMapContainer.jsx';
 
 // Category details and clinical subtopics are loaded dynamically from the backend database via API
@@ -104,12 +105,7 @@ const CategoryBranchMap = () => {
   }, [activeCatObj, navigate]);
 
   if (isLoading && !categoryData) {
-    return (
-      <div className="p-8 text-center font-semibold text-navy flex flex-col items-center gap-4">
-        <Brain className="w-12 h-12 text-cyan animate-bounce" />
-        <span className="text-lg">Loading Complete Medical Branch Tree...</span>
-      </div>
-    );
+    return <NeonBrainLoader text="Mapping Clinical Pathways..." />;
   }
 
   return (

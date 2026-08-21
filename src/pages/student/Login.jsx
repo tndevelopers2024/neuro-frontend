@@ -62,7 +62,7 @@ const Login = () => {
 
         <form onSubmit={handleFormSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-navy uppercase tracking-wider mb-1.5">Email Address</label>
+            <label className="block text-xs font-bold text-navy text-left uppercase tracking-wider mb-1.5">Email Address</label>
             <div className="relative flex items-center">
               <Mail className="w-5 h-5 text-muted absolute left-3.5 pointer-events-none" />
               <input
@@ -78,7 +78,7 @@ const Login = () => {
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-bold text-navy uppercase tracking-wider">Password</label>
+              <label className="block text-xs font-bold text-navy text-left uppercase tracking-wider">Password</label>
               <a href="#forgot" onClick={(e) => { e.preventDefault(); alert("For demo accounts, default password is 'password123'."); }} className="text-xs font-semibold text-primaryBlue hover:underline">Forgot Password?</a>
             </div>
             <div className="relative flex items-center">
