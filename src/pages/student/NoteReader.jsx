@@ -6,6 +6,7 @@ import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import PDFFlipbook from '../../components/common/PDFFlipbook.jsx';
 import PDFStandardReader from '../../components/common/PDFStandardReader.jsx';
+import DocxViewer from '../../components/common/DocxViewer.jsx';
 import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 
 const COLORS = [

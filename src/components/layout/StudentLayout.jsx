@@ -6,18 +6,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { Brain } from 'lucide-react';
 
 const StudentLayout = () => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-secondaryBg flex flex-col items-center justify-center gap-4">
-        <div className="w-16 h-16 rounded-lg bg-[#E9F2FF] border border-primaryBlue/30 flex items-center justify-center shadow-lg animate-bounce">
-          <Brain className="w-10 h-10 text-primaryBlue" />
-        </div>
-        <p className="text-sm font-bold text-navy tracking-wide animate-pulse">Loading NeuroMind Scholars Curriculum...</p>
-      </div>
-    );
-  }
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

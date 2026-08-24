@@ -1302,10 +1302,10 @@ const ManageCategories = () => {
                     <Icons.FileText className="w-4 h-4" />
                     UPLOAD NOTES FILE
                   </div>
-                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Attach PDF File *</label>
+                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Attach PDF or DOCX File *</label>
                   <input
                     type="file"
-                    accept="application/pdf"
+                    accept="application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.doc,application/msword"
                     required
                     onChange={(e) => setResourceForm({ ...resourceForm, file: e.target.files[0] })}
                     className="w-full text-sm text-navy file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primaryBlue file:text-white hover:file:bg-navy transition-all"

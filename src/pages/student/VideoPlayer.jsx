@@ -6,6 +6,7 @@ import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
 import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const extractYouTubeId = (url = '') => {
   if (!url) return null;
@@ -24,6 +25,7 @@ const formatTime = (secs = 0) => {
 const VideoPlayer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const videoRef = useRef(null);
   const playerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -348,6 +350,24 @@ const VideoPlayer = () => {
                 />
               )}
               
+              {/* Anti-Piracy Watermark Overlay */}
+              {user && (
+                <div className="absolute inset-0 z-[15] pointer-events-none overflow-hidden opacity-30 select-none flex items-center justify-center">
+                  <div className="transform -rotate-[15deg] flex flex-col items-center">
+                    <span className="text-white text-3xl md:text-6xl font-black tracking-[0.15em] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] whitespace-nowrap">
+                      {user.fullName}
+                    </span>
+                    <span className="text-white text-lg md:text-3xl font-bold tracking-widest mt-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                      {user.email}
+                    </span>
+                  </div>
+                  <div className="absolute top-8 left-8 text-white/80 text-xs md:text-sm font-bold tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{user.email}</div>
+                  <div className="absolute bottom-24 right-8 text-white/80 text-xs md:text-sm font-bold tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{user.email}</div>
+                  <div className="absolute top-8 right-8 text-white/80 text-xs md:text-sm font-bold tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{user.fullName}</div>
+                  <div className="absolute bottom-24 left-8 text-white/80 text-xs md:text-sm font-bold tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{user.fullName}</div>
+                </div>
+              )}
+
               {/* Custom Controls Overlay */}
               <div className={`absolute bottom-0 left-0 right-0 p-4 pt-16 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300 flex flex-col gap-2 z-20 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
                 
