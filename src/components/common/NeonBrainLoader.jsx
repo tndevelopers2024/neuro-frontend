@@ -10,13 +10,9 @@ const NeonBrainLoader = ({ text = "Loading...", fullScreen = true }) => {
         <div className="absolute inset-0 rounded-full border-[3px] border-[#126BEE] opacity-20 animate-ping" style={{ animationDuration: '2s' }}></div>
         <div className="absolute -inset-4 rounded-full border-[1px] border-[#13A7B5] opacity-30 animate-pulse"></div>
         
-        {/* The glowing brain SVG */}
-        <div className="relative z-10 filter drop-shadow-[0_0_20px_rgba(18,107,238,1)] text-[#126BEE] animate-pulse" style={{ animationDuration: '3s' }}>
-          <Brain className="w-24 h-24" strokeWidth={1.2} />
-          {/* Medical cross in the center, glowing white */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Plus className="w-8 h-8 text-white filter drop-shadow-[0_0_15px_rgba(255,255,255,1)]" strokeWidth={4} />
-          </div>
+        {/* The glowing logo */}
+        <div className="relative z-10 filter drop-shadow-[0_0_20px_rgba(18,107,238,1)] animate-pulse" style={{ animationDuration: '3s' }}>
+          <img src="/nuro-logo-fav.png" alt="Neuro Mind" className="w-24 h-24 object-contain" />
         </div>
       </div>
 

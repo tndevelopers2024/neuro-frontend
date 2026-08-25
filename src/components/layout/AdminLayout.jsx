@@ -28,18 +28,12 @@ const AdminLayout = () => {
 
   return (
     <div className="flex min-h-screen bg-[#F4F7FC] text-navy font-sans select-none">
-      {/* Admin Dark Navy Sidebar */}
-      <aside className="w-72 h-screen bg-navy text-white flex flex-col justify-between p-6 shrink-0 shadow-elevated z-30 sticky top-0 overflow-y-auto">
+      {/* Admin Light Sidebar */}
+      <aside className="w-72 h-screen bg-white text-navy border-r border-borderLine flex flex-col justify-between p-6 shrink-0 z-30 sticky top-0 overflow-y-auto">
         <div>
-          <div className="flex items-center gap-3 px-1 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primaryBlue text-white flex items-center justify-center font-bold text-lg shadow-md">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="font-semibold text-white tracking-tight text-base leading-none">ADMIN PORTAL</div>
-              <div className="text-[10px] font-bold text-primaryBlue tracking-widest mt-1 uppercase">CURRICULUM ENGINE</div>
-            </div>
-          </div>
+          <Link to="/admin/dashboard" className="block px-1 mb-8">
+            <img src="/nuro-logo.png" alt="Admin Portal" className="w-48 object-contain mx-auto" />
+          </Link>
 
           <nav className="space-y-6">
             {navGroups.map((group) => (
@@ -58,7 +52,7 @@ const AdminLayout = () => {
                           `flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                             isActive
                               ? 'bg-primaryBlue text-white shadow-md font-bold'
-                              : 'text-white/70 hover:text-white hover:bg-white/10'
+                              : 'text-muted hover:text-primaryBlue hover:bg-secondaryBg'
                           }`
                         }
                       >
@@ -74,10 +68,10 @@ const AdminLayout = () => {
         </div>
 
         {/* Exit to Student Curriculum Button (Requirement 34) */}
-        <div className="space-y-3 pt-6 border-t border-white/15">
+        <div className="space-y-3 pt-6 border-t border-borderLine">
           <Link
             to="/"
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-all shadow-xs"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-secondaryBg hover:bg-[#E9F2FF] hover:text-primaryBlue text-navy font-semibold text-xs transition-all shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Exit to Student Curriculum</span>

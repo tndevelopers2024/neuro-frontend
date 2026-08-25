@@ -353,14 +353,6 @@ const VideoPlayer = () => {
               {/* Anti-Piracy Watermark Overlay */}
               {user && (
                 <div className="absolute inset-0 z-[15] pointer-events-none overflow-hidden opacity-30 select-none flex items-center justify-center">
-                  <div className="transform -rotate-[15deg] flex flex-col items-center">
-                    <span className="text-white text-3xl md:text-6xl font-black tracking-[0.15em] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] whitespace-nowrap">
-                      {user.fullName}
-                    </span>
-                    <span className="text-white text-lg md:text-3xl font-bold tracking-widest mt-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                      {user.email}
-                    </span>
-                  </div>
                   <div className="absolute top-8 left-8 text-white/80 text-xs md:text-sm font-bold tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{user.email}</div>
                   <div className="absolute bottom-24 right-8 text-white/80 text-xs md:text-sm font-bold tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{user.email}</div>
                   <div className="absolute top-8 right-8 text-white/80 text-xs md:text-sm font-bold tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{user.fullName}</div>

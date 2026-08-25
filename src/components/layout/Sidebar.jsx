@@ -59,14 +59,8 @@ const Sidebar = () => {
     <aside className="w-64 xl:w-72 bg-white border-r border-borderLine h-screen flex flex-col justify-between p-5 shrink-0 z-30 select-none sticky top-0 overflow-y-auto">
       <div>
         {/* Brand Logo Header */}
-        <Link to="/" className="flex items-center gap-3 px-2 mb-8 group">
-          <div className="w-10 h-10 rounded-xl bg-[#E9F2FF] border border-primaryBlue/20 flex items-center justify-center group-hover:bg-primaryBlue transition-all duration-300 shadow-xs">
-            <Brain className="w-6 h-6 text-primaryBlue group-hover:text-white transition-colors duration-300 animate-pulse" />
-          </div>
-          <div>
-            <div className="font-bold text-navy tracking-tight text-lg leading-none">NEUROMIND</div>
-            <div className="text-[10px] font-semibold text-primaryBlue tracking-widest mt-1 uppercase">SCHOLARS</div>
-          </div>
+        <Link to="/" className="block px-2 mb-8">
+          <img src="/nuro-logo.png" alt="Neuro Mind Scholars" className="w-48 object-contain mx-auto" />
         </Link>
 
         {/* Main Navigation Menu */}
