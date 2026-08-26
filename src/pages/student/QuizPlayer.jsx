@@ -5,6 +5,7 @@ import { HelpCircle, CheckCircle2, XCircle, ArrowLeft, ArrowRight, RotateCcw, Aw
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
+import MatrixMatchInteractive from '../../components/quiz/MatrixMatchInteractive.jsx';
 
 const QuizPlayer = () => {
   const { topicSlug = 'history-of-asd' } = useParams();
@@ -13,6 +14,8 @@ const QuizPlayer = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({}); // { 0: 'C', 1: 'C' }
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [shuffleSeed, setShuffleSeed] = useState(0);
 
   // Fetch MCQs for topic
   const { data: quizData, isLoading } = useQuery({
@@ -22,23 +25,71 @@ const QuizPlayer = () => {
   });
 
   const topic = quizData?.topic || {};
-  const mcqs = quizData?.mcqs || [];
+  
+  // Memoize and shuffle MCQs when data is loaded or when quiz is retaken
+  const mcqs = React.useMemo(() => {
+    if (!quizData?.mcqs) return [];
+    return [...quizData.mcqs].sort(() => Math.random() - 0.5);
+  }, [quizData, shuffleSeed]);
 
   const handleOptionSelect = (optLetter) => {
     if (isSubmitted) return;
-    setSelectedAnswers({ ...selectedAnswers, [currentIdx]: optLetter });
+    const qType = mcqs[currentIdx].type || 'SINGLE';
+    if (qType === 'SINGLE') {
+      setSelectedAnswers({ ...selectedAnswers, [currentIdx]: optLetter });
+    } else if (qType === 'MULTIPLE') {
+      const current = selectedAnswers[currentIdx] || [];
+      let next;
+      if (current.includes(optLetter)) {
+        next = current.filter(o => o !== optLetter);
+      } else {
+        next = [...current, optLetter];
+      }
+      setSelectedAnswers({ ...selectedAnswers, [currentIdx]: next });
+    }
+  };
+
+  const handleMatrixSelect = (leftId, rightId) => {
+    if (isSubmitted) return;
+    const current = selectedAnswers[currentIdx] || {};
+    setSelectedAnswers({
+      ...selectedAnswers,
+      [currentIdx]: { ...current, [leftId]: rightId }
+    });
   };
 
   const handleFinalSubmit = async () => {
     let correctCount = 0;
     mcqs.forEach((q, idx) => {
-      if (selectedAnswers[idx] === q.correctAnswer) {
-        correctCount += 1;
+      const qType = q.type || 'SINGLE';
+      const ans = selectedAnswers[idx];
+
+      if (qType === 'SINGLE') {
+        if (ans === q.correctAnswer) correctCount += 1;
+      } else if (qType === 'MULTIPLE') {
+        const correctArray = q.correctAnswers || [];
+        const studentArray = ans || [];
+        if (correctArray.length > 0 && correctArray.length === studentArray.length) {
+          const isCorrect = correctArray.every(opt => studentArray.includes(opt));
+          if (isCorrect) correctCount += 1;
+        }
+      } else if (qType === 'MATRIX') {
+        const correctMatches = q.matrixMatches || [];
+        const studentMatches = ans || {};
+        let isCorrect = true;
+        if (correctMatches.length === 0) isCorrect = false;
+        correctMatches.forEach(m => {
+          if (studentMatches[m.leftId] !== m.rightId) {
+            isCorrect = false;
+          }
+        });
+        if (isCorrect) correctCount += 1;
       }
     });
     const calcPercentage = Math.round((correctCount / mcqs.length) * 100);
     setScore(calcPercentage);
     setIsSubmitted(true);
+    setShowResultModal(true);
 
     try {
       await api.post('/quiz/submit', {
@@ -56,8 +107,10 @@ const QuizPlayer = () => {
   const resetQuiz = () => {
     setSelectedAnswers({});
     setIsSubmitted(false);
+    setShowResultModal(false);
     setCurrentIdx(0);
     setScore(0);
+    setShuffleSeed(prev => prev + 1);
   };
 
   if (isLoading) {
@@ -120,7 +173,7 @@ const QuizPlayer = () => {
 
         {/* Options Radio Cards */}
         <div className="space-y-4">
-          {['A', 'B', 'C', 'D'].map((letter) => {
+          {(!currentQ.type || currentQ.type === 'SINGLE') && ['A', 'B', 'C', 'D'].map((letter) => {
             const optionText = currentQ[`option${letter}`];
             if (!optionText) return null;
 
@@ -160,6 +213,57 @@ const QuizPlayer = () => {
               </div>
             );
           })}
+
+          {currentQ.type === 'MULTIPLE' && ['A', 'B', 'C', 'D'].map((letter) => {
+            const optionText = currentQ[`option${letter}`];
+            if (!optionText) return null;
+            const currentSelected = selectedAnswers[currentIdx] || [];
+            const isSelected = currentSelected.includes(letter);
+            const isCorrect = currentQ.correctAnswers?.includes(letter);
+
+            let cardStyle = 'bg-secondaryBg border-borderLine text-navy hover:bg-white hover:border-primaryBlue/40';
+            if (isSelected && !isSubmitted) {
+              cardStyle = 'bg-[#E9F2FF] border-primaryBlue text-primaryBlue font-bold ring-2 ring-primaryBlue/20';
+            }
+            if (isSubmitted) {
+              if (isCorrect) {
+                cardStyle = 'bg-[#EAF7ED] border-medicalGreen text-medicalGreen font-bold ring-2 ring-medicalGreen/30';
+              } else if (isSelected && !isCorrect) {
+                cardStyle = 'bg-[#FFF2F2] border-[#DC2626] text-[#DC2626] font-bold ring-2 ring-[#DC2626]/20';
+              } else {
+                cardStyle = 'bg-white/60 border-borderLine/60 text-muted opacity-60';
+              }
+            }
+
+            return (
+              <div
+                key={letter}
+                onClick={() => handleOptionSelect(letter)}
+                className={`p-5 rounded-lg border flex items-center justify-between cursor-pointer transition-all ${cardStyle}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-5 h-5 rounded flex items-center justify-center text-sm font-bold border ${
+                    isSelected ? 'bg-primaryBlue border-transparent' : 'bg-white border-borderLine'
+                  }`}>
+                    {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
+                  </div>
+                  <span className="text-sm font-semibold">{optionText}</span>
+                </div>
+                {isSubmitted && isCorrect && <CheckCircle2 className="w-5 h-5 text-medicalGreen shrink-0" />}
+                {isSubmitted && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-[#DC2626] shrink-0" />}
+              </div>
+            );
+          })}
+
+          {currentQ.type === 'MATRIX' && (
+            <MatrixMatchInteractive
+              currentQ={currentQ}
+              selectedAnswers={selectedAnswers}
+              currentIdx={currentIdx}
+              isSubmitted={isSubmitted}
+              onMatrixSelect={handleMatrixSelect}
+            />
+          )}
         </div>
 
         {/* Clinical Rationale Explanation Block */}
@@ -200,6 +304,51 @@ const QuizPlayer = () => {
           </div>
         </div>
       </div>
+
+      {/* Result Modal Popup */}
+      {showResultModal && (
+        <div className="fixed inset-0 bg-navy/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-elevated w-full max-w-md overflow-hidden flex flex-col transform scale-100 animate-slideUp">
+            
+            <div className={`p-8 text-center text-white ${
+              score >= 80 ? 'bg-gradient-to-br from-medicalGreen to-[#1C8D3C]' : 
+              score >= 60 ? 'bg-gradient-to-br from-[#F59E0B] to-[#D97706]' : 
+              'bg-gradient-to-br from-[#EF4444] to-[#DC2626]'
+            }`}>
+              <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4 backdrop-blur-md border border-white/30">
+                <Award className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-3xl font-extrabold mb-1">{score}%</h2>
+              <p className="text-white/80 font-semibold uppercase tracking-widest text-xs">
+                {score >= 80 ? 'Exceptional Mastery' : score >= 60 ? 'Passing Score' : 'Needs Review'}
+              </p>
+            </div>
+            
+            <div className="p-8 text-center bg-white">
+              <p className="text-navy font-bold text-lg mb-2">Quiz Completed!</p>
+              <p className="text-muted text-sm mb-8">
+                You correctly answered <span className="font-bold text-navy">{Math.round((score / 100) * mcqs.length)}</span> out of <span className="font-bold text-navy">{mcqs.length}</span> questions.
+              </p>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => setShowResultModal(false)}
+                  className="w-full btn-primary py-3"
+                >
+                  Review Detailed Explanations
+                </button>
+                <button 
+                  onClick={resetQuiz}
+                  className="w-full bg-secondaryBg hover:bg-[#E9F2FF] text-navy hover:text-primaryBlue font-bold py-3 rounded-xl border border-borderLine transition-colors"
+                >
+                  Retake Quiz
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

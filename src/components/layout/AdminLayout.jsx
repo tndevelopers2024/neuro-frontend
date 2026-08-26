@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Navigate, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { LayoutDashboard, Brain, Activity, Compass, FileText, HelpCircle, Layers, Users, LogOut, ArrowLeft, ShieldCheck, PlusCircle, Table } from 'lucide-react';
+import Header from './Header.jsx';
 
 const AdminLayout = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -27,7 +28,7 @@ const AdminLayout = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-[#F4F7FC] text-navy font-sans select-none">
+    <div className="flex h-screen bg-[#F4F7FC] text-navy font-sans select-none overflow-hidden">
       {/* Admin Light Sidebar */}
       <aside className="w-72 h-screen bg-white text-navy border-r border-borderLine flex flex-col justify-between p-6 shrink-0 z-30 sticky top-0 overflow-y-auto">
         <div>
@@ -74,7 +75,7 @@ const AdminLayout = () => {
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-secondaryBg hover:bg-[#E9F2FF] hover:text-primaryBlue text-navy font-semibold text-xs transition-all shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Exit to Student Curriculum</span>
+            <span>Student Panel</span>
           </Link>
 
           <button
@@ -82,25 +83,16 @@ const AdminLayout = () => {
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#DB2674] hover:bg-[#B7185D] text-white font-semibold text-xs transition-all shadow-md"
           >
             <LogOut className="w-4 h-4" />
-            <span>Sign Out Securely</span>
+            <span>Logout</span>
           </button>
         </div>
       </aside>
 
       {/* Admin Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <header className="bg-white border-b border-borderLine px-8 py-4 flex items-center justify-between shadow-xs sticky top-0 z-20">
-          <div className="flex items-center gap-3">
-            <span className="bg-[#EAF7ED] text-medicalGreen text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-              System Health: Online & Fully Hydrated
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-muted">Administrator Logged In: <span className="text-navy">{user?.fullName || 'Dr. Alistair Vance'}</span></span>
-          </div>
-        </header>
+      <div className="flex-1 h-screen overflow-y-auto relative">
+        <Header />
 
-        <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
+        <main className="p-8 max-w-7xl mx-auto w-full">
           <Outlet />
         </main>
       </div>

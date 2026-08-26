@@ -144,10 +144,6 @@ const TopicMindMap = () => {
           ]}
         />
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-borderLine text-xs font-semibold text-navy hover:text-primaryBlue shadow-sm hover:shadow transition-all">
-            <Star className="w-4 h-4 text-amber-500" />
-            <span>Add to Favorites</span>
-          </button>
           <Link
             to={topic.categorySlug ? `/learn/psychiatry/${topic.categorySlug}` : '/'}
             className="flex items-center gap-1.5 text-xs font-semibold text-navy hover:text-primaryBlue bg-white px-4 py-2 rounded-lg border border-borderLine shadow-sm hover:shadow transition-all"

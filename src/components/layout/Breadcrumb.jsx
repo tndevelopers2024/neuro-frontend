@@ -35,10 +35,6 @@ const Breadcrumb = ({ items = [] }) => {
 
       {/* Quick Favorite / Study Action Badge (Matching screenshot header action bar) */}
       <div className="flex items-center gap-2.5">
-        <button className="flex items-center gap-2 bg-white hover:bg-secondaryBg text-navy border border-borderLine px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-          <Star className="w-3.5 h-3.5 text-medicalOrange fill-medicalOrange/20" />
-          <span>Add to Favorites</span>
-        </button>
         <Link
           to="/my-notes"
           className="flex items-center gap-2 bg-[#E9F2FF] hover:bg-primaryBlue text-primaryBlue hover:text-white border border-primaryBlue/20 px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-all transform hover:-translate-y-0.5 active:translate-y-0 group"

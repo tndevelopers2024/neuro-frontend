@@ -6,6 +6,7 @@ import * as Icons from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import { CardSkeleton, TableSkeleton } from '../../components/common/Skeleton.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 // Curated list of medical and educational Lucide icons with labels for visual dropdown
 const AVAILABLE_ICONS = [
@@ -247,6 +248,7 @@ const IconDropdownSelector = ({ selectedIconName, onChange, color = '#126BEE' })
 
 const ManageCategories = () => {
   // Modal states
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [isCatModalOpen, setIsCatModalOpen] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', icon: 'Brain', color: '#126BEE', displayOrder: 1 });
   const [editingId, setEditingId] = useState(null);
@@ -272,19 +274,35 @@ const ManageCategories = () => {
   // MCQ Modal States
   const [isMcqModalOpen, setIsMcqModalOpen] = useState(false);
   const [mcqForm, setMcqForm] = useState({
+    type: 'SINGLE',
     question: '',
     optionA: '',
     optionB: '',
     optionC: '',
     optionD: '',
     correctAnswer: 'A',
+    correctAnswers: [],
+    matrixLeft: [{ id: 'A', text: '' }, { id: 'B', text: '' }, { id: 'C', text: '' }, { id: 'D', text: '' }],
+    matrixRight: [{ id: 'P', text: '' }, { id: 'Q', text: '' }, { id: 'R', text: '' }, { id: 'S', text: '' }],
+    matrixMatches: [{ leftId: 'A', rightId: 'P' }, { leftId: 'B', rightId: 'Q' }, { leftId: 'C', rightId: 'R' }, { leftId: 'D', rightId: 'S' }],
     difficulty: 'Medium',
     explanation: ''
+  });
+
+  // Flashcard Modal States
+  const [isFlashcardModalOpen, setIsFlashcardModalOpen] = useState(false);
+  const [flashcardForm, setFlashcardForm] = useState({
+    frontTerm: '',
+    backDefinition: '',
+    categoryTag: 'Key Termology & Mechanism',
+    displayOrder: 1
   });
 
   // Video Preview State
   const [previewVideo, setPreviewVideo] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
+
+
 
   // Drill-down View Stack State
   const [viewStack, setViewStack] = useState([{ type: 'categories', label: 'Domain Categories', data: null }]);
@@ -323,6 +341,22 @@ const ManageCategories = () => {
     staleTime: 20 * 1000,
   });
   const allMaterials = useMemo(() => matData?.materials || [], [matData]);
+
+  // Fetch MCQs
+  const { data: mcqData, isLoading: mcqLoading } = useQuery({
+    queryKey: ['allMcqsAdmin'],
+    queryFn: () => api.get('/quiz/admin/all'),
+    staleTime: 20 * 1000,
+  });
+  const allMcqs = useMemo(() => mcqData?.mcqs || [], [mcqData]);
+
+  // Fetch Flashcards
+  const { data: fcData, isLoading: fcLoading } = useQuery({
+    queryKey: ['allFlashcardsAdmin'],
+    queryFn: () => api.get('/flashcards/all'),
+    staleTime: 20 * 1000,
+  });
+  const allFlashcards = useMemo(() => fcData?.flashcards || [], [fcData]);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const urlRestored = useRef(false);
@@ -382,7 +416,7 @@ const ManageCategories = () => {
           const [typeId, childId] = id.split('_');
           const childObj = allTopics.find(t => t._id === childId) || currentChild;
           if (childObj) {
-            const typeLabels = { 'VIDEO': 'Video Lectures', 'NOTES': 'Study Notes', 'MCQ': 'MCQ Assessments' };
+            const typeLabels = { 'VIDEO': 'Video Lectures', 'NOTES': 'Study Notes', 'MCQ': 'MCQ Assessments', 'FLASHCARD': 'Flashcards' };
             newStack.push({ type, label: typeLabels[typeId] || typeId, data: { child: childObj, typeId } });
           }
         }
@@ -425,10 +459,16 @@ const ManageCategories = () => {
 
   const handleDelete = (id, name, e) => {
     if (e) e.stopPropagation();
-    if (window.confirm(`⚠️ CONFIRM DELETION:\nAre you sure you want to delete Category "${name}" and its linked branches?`)) {
-      deleteMutation.mutate(id);
-      if (currentView.data?._id === id) navigateBack(0);
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Category',
+      message: `⚠️ CONFIRM DELETION:\nAre you sure you want to delete Category "${name}" and its linked branches?`,
+      onConfirm: () => {
+        deleteMutation.mutate(id);
+        if (currentView.data?._id === id) navigateBack(0);
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
   const openNewCategoryModal = () => {
@@ -476,25 +516,31 @@ const ManageCategories = () => {
     }
   };
 
-  const deleteSubtopic = async (id, title, e) => {
+  const deleteSubtopic = (id, title, e) => {
     if (e) e.stopPropagation();
     if (id.startsWith('default-')) {
       toast.error('Cannot delete fallback placeholder topics. Add a real topic to override them.');
       return;
     }
-    if (window.confirm(`Delete subtopic "${title}" from this domain branch?`)) {
-      if (!id.startsWith('sub-')) {
-        try {
-          await api.delete(`/topics/${id}`);
-        } catch (err) {
-          toast.error(err.response?.data?.message || 'Failed to delete subtopic');
-          return;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Subtopic',
+      message: `Delete subtopic "${title}" from this domain branch?`,
+      onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        if (!id.startsWith('sub-')) {
+          try {
+            await api.delete(`/topics/${id}`);
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to delete subtopic');
+            return;
+          }
         }
+        queryClient.invalidateQueries();
+        toast.success('🗑️ Subtopic removed.');
+        if (currentView.data?._id === id) navigateBack(viewStack.length - 2);
       }
-      queryClient.invalidateQueries();
-      toast.success('🗑️ Subtopic removed.');
-      if (currentView.data?._id === id) navigateBack(viewStack.length - 2);
-    }
+    });
   };
 
   const openAddSubtopicModal = (cat) => {
@@ -547,10 +593,21 @@ const ManageCategories = () => {
     setEditingResourceId(null);
     if (typeId === 'MCQ') {
       setMcqForm({
+        type: 'SINGLE',
         question: '', optionA: '', optionB: '', optionC: '', optionD: '',
-        correctAnswer: 'A', difficulty: 'Medium', explanation: ''
+        correctAnswer: 'A',
+        correctAnswers: [],
+        matrixLeft: [{ id: 'A', text: '' }, { id: 'B', text: '' }, { id: 'C', text: '' }, { id: 'D', text: '' }],
+        matrixRight: [{ id: 'P', text: '' }, { id: 'Q', text: '' }, { id: 'R', text: '' }, { id: 'S', text: '' }],
+        matrixMatches: [{ leftId: 'A', rightId: 'P' }, { leftId: 'B', rightId: 'Q' }, { leftId: 'C', rightId: 'R' }, { leftId: 'D', rightId: 'S' }],
+        difficulty: 'Medium', explanation: ''
       });
       setIsMcqModalOpen(true);
+    } else if (typeId === 'FLASHCARD') {
+      setFlashcardForm({
+        frontTerm: '', backDefinition: '', categoryTag: 'Key Termology & Mechanism', displayOrder: 1
+      });
+      setIsFlashcardModalOpen(true);
     } else {
       setResourceForm({
         title: '',
@@ -567,7 +624,36 @@ const ManageCategories = () => {
     setSelectedTopicForResource(topic);
     setEditingResourceId(mat._id);
     if (typeId === 'MCQ') {
-      // Handle MCQ edit if needed
+      const fullMcq = allMcqs.find(m => m._id === mat._id);
+      if (fullMcq) {
+        setMcqForm({
+          type: fullMcq.type || 'SINGLE',
+          question: fullMcq.question || '',
+          optionA: fullMcq.optionA || '',
+          optionB: fullMcq.optionB || '',
+          optionC: fullMcq.optionC || '',
+          optionD: fullMcq.optionD || '',
+          correctAnswer: fullMcq.correctAnswer || 'A',
+          correctAnswers: fullMcq.correctAnswers || [],
+          matrixLeft: fullMcq.matrixLeft || [{ id: 'A', text: '' }, { id: 'B', text: '' }, { id: 'C', text: '' }, { id: 'D', text: '' }],
+          matrixRight: fullMcq.matrixRight || [{ id: 'P', text: '' }, { id: 'Q', text: '' }, { id: 'R', text: '' }, { id: 'S', text: '' }],
+          matrixMatches: fullMcq.matrixMatches || [{ leftId: 'A', rightId: 'P' }, { leftId: 'B', rightId: 'Q' }, { leftId: 'C', rightId: 'R' }, { leftId: 'D', rightId: 'S' }],
+          difficulty: fullMcq.difficulty || 'Medium',
+          explanation: fullMcq.explanation || ''
+        });
+        setIsMcqModalOpen(true);
+      }
+    } else if (typeId === 'FLASHCARD') {
+      const fullFlashcard = allFlashcards.find(f => f._id === mat._id);
+      if (fullFlashcard) {
+        setFlashcardForm({
+          frontTerm: fullFlashcard.frontTerm || '',
+          backDefinition: fullFlashcard.backDefinition || '',
+          categoryTag: fullFlashcard.categoryTag || 'Key Termology & Mechanism',
+          displayOrder: fullFlashcard.displayOrder || 1
+        });
+        setIsFlashcardModalOpen(true);
+      }
     } else {
       setResourceForm({
         title: mat.title,
@@ -580,28 +666,88 @@ const ManageCategories = () => {
     }
   };
 
-  const deleteResource = async (id, title) => {
-    if (window.confirm(`Delete material "${title}"?`)) {
-      try {
-        await api.delete(`/materials/${id}`);
-        queryClient.invalidateQueries({ queryKey: ['allMaterialsAdmin'] });
-        toast.success('🗑️ Resource removed.');
-      } catch (err) {
-        toast.error(err.response?.data?.message || 'Failed to delete resource');
+  const deleteResource = (id, title, typeId) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Item',
+      message: `Delete item "${title}"?`,
+      onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        try {
+          if (typeId === 'MCQ') {
+            await api.delete(`/quiz/${id}`);
+            queryClient.invalidateQueries({ queryKey: ['allMcqsAdmin'] });
+          } else if (typeId === 'FLASHCARD') {
+            await api.delete(`/flashcards/${id}`);
+            queryClient.invalidateQueries({ queryKey: ['allFlashcardsAdmin'] });
+            queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+          } else {
+            await api.delete(`/materials/${id}`);
+            queryClient.invalidateQueries({ queryKey: ['allMaterialsAdmin'] });
+          }
+          toast.success('🗑️ Item removed.');
+        } catch (err) {
+          toast.error(err.response?.data?.message || 'Failed to delete item');
+        }
       }
-    }
+    });
+  };
+
+  const handleMatrixMatchChange = (leftId, rightId) => {
+    setMcqForm(prev => {
+      const newMatches = [...prev.matrixMatches];
+      const idx = newMatches.findIndex(m => m.leftId === leftId);
+      if (idx >= 0) newMatches[idx].rightId = rightId;
+      else newMatches.push({ leftId, rightId });
+      return { ...prev, matrixMatches: newMatches };
+    });
+  };
+
+  const toggleCorrectAnswer = (opt) => {
+    setMcqForm(prev => {
+      const current = prev.correctAnswers || [];
+      if (current.includes(opt)) {
+        return { ...prev, correctAnswers: current.filter(o => o !== opt) };
+      } else {
+        return { ...prev, correctAnswers: [...current, opt] };
+      }
+    });
   };
 
   const saveMcq = async (e) => {
     e.preventDefault();
     try {
       const payload = { ...mcqForm, topic: selectedTopicForResource._id };
-      await api.post('/quizzes', payload);
-      toast.success('🎉 MCQ added to Assessment Bank!');
-      queryClient.invalidateQueries();
+      if (editingResourceId) {
+        await api.put(`/quiz/${editingResourceId}`, payload);
+        toast.success('🎉 MCQ updated successfully!');
+      } else {
+        await api.post('/quiz', payload);
+        toast.success('🎉 MCQ added to Assessment Bank!');
+      }
+      queryClient.invalidateQueries({ queryKey: ['allMcqsAdmin'] });
       setIsMcqModalOpen(false);
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to save MCQ');
+    }
+  };
+
+  const saveFlashcard = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = { ...flashcardForm, topic: selectedTopicForResource._id };
+      if (editingResourceId) {
+        await api.put(`/flashcards/${editingResourceId}`, payload);
+        toast.success('🎉 Flashcard updated successfully!');
+      } else {
+        await api.post('/flashcards', payload);
+        toast.success('🎉 Flashcard added to Deck!');
+      }
+      queryClient.invalidateQueries({ queryKey: ['allFlashcardsAdmin'] });
+      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+      setIsFlashcardModalOpen(false);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to save Flashcard');
     }
   };
 
@@ -893,39 +1039,76 @@ const ManageCategories = () => {
       { id: 'VIDEO', label: 'Video Lectures', icon: Icons.Video, color: '#DB2674', desc: 'Manage video content and lectures' },
       { id: 'NOTES', label: 'Documents & Notes', icon: Icons.FileText, color: '#13A7B5', desc: 'Manage PDFs and rich text notes' },
       { id: 'MCQ', label: 'MCQs & Quizzes', icon: Icons.CheckSquare, color: '#F17B18', desc: 'Manage practice questions' },
+      { id: 'FLASHCARD', label: 'Flashcards', icon: Icons.Layers, color: '#8B5CF6', desc: 'Manage active recall flashcards' },
     ];
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {types.map(t => {
-          const TIcon = t.icon;
-          return (
-            <div 
-              key={t.id}
-              onClick={() => navigateForward('resources', t.label, { child, typeId: t.id })}
-              className="bg-white border border-borderLine rounded-xl p-6 shadow-soft hover:shadow-elevated hover:-translate-y-1 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-3"
-            >
-              <div style={{ backgroundColor: `${t.color}15`, color: t.color }} className="w-16 h-16 rounded-2xl flex items-center justify-center">
-                <TIcon className="w-8 h-8" />
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {types.map(t => {
+            const TIcon = t.icon;
+            return (
+              <div 
+                key={t.id}
+                onClick={() => navigateForward('resources', t.label, { child, typeId: t.id })}
+                className="bg-white border border-borderLine rounded-xl p-6 shadow-soft hover:shadow-elevated hover:-translate-y-1 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-3"
+              >
+                <div style={{ backgroundColor: `${t.color}15`, color: t.color }} className="w-16 h-16 rounded-2xl flex items-center justify-center">
+                  <TIcon className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-navy">{t.label}</h3>
+                  <p className="text-xs text-muted font-medium mt-1">{t.desc}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-navy">{t.label}</h3>
-                <p className="text-xs text-muted font-medium mt-1">{t.desc}</p>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+
+        <ConfirmModal
+          isOpen={confirmConfig.isOpen}
+          title={confirmConfig.title}
+          message={confirmConfig.message}
+          onConfirm={confirmConfig.onConfirm}
+          onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+          confirmText="Delete"
+          cancelText="Cancel"
+          isDestructive={true}
+        />
+      </>
     );
   };
 
   const renderResourcesTable = ({ child, typeId }) => {
-    if (matLoading) return <TableSkeleton rows={5} columns={4} />;
-    // Filter materials
-    const materials = allMaterials.filter(m => {
-       const mTopicId = m.topic?._id || m.topic;
-       return mTopicId?.toString() === child._id?.toString() && m.type === typeId;
-    });
+    if (matLoading || mcqLoading || fcLoading) return <TableSkeleton rows={5} columns={4} />;
+    
+    let items = [];
+    if (typeId === 'MCQ') {
+      items = allMcqs.filter(m => {
+        const mTopicId = m.topic?._id || m.topic;
+        return mTopicId?.toString() === child._id?.toString();
+      }).map(m => ({
+        _id: m._id,
+        title: m.question,
+        description: m.explanation,
+        type: 'MCQ'
+      }));
+    } else if (typeId === 'FLASHCARD') {
+      items = allFlashcards.filter(f => {
+        const fTopicId = f.topic?._id || f.topic;
+        return fTopicId?.toString() === child._id?.toString();
+      }).map(f => ({
+        _id: f._id,
+        title: f.frontTerm,
+        description: f.backDefinition,
+        type: 'FLASHCARD'
+      }));
+    } else {
+      items = allMaterials.filter(m => {
+        const mTopicId = m.topic?._id || m.topic;
+        return mTopicId?.toString() === child._id?.toString() && m.type === typeId;
+      });
+    }
 
     return (
       <div className="bg-white rounded-xl border border-borderLine shadow-soft overflow-hidden">
@@ -950,40 +1133,40 @@ const ManageCategories = () => {
           <table className="w-full text-left text-sm">
             <thead className="bg-secondaryBg text-muted font-bold text-xs uppercase tracking-wider">
               <tr>
-                <th className="p-4 rounded-tl-lg">Title</th>
-                <th className="p-4">Description</th>
+                <th className="p-4 rounded-tl-lg">Title / Question</th>
+                <th className="p-4">Description / Details</th>
                 <th className="p-4">Type</th>
                 <th className="p-4 text-right rounded-tr-lg">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-borderLine">
-              {materials.length === 0 ? (
+              {items.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="p-8 text-center text-muted text-sm font-medium">
                     No resources found. Click "Add New Resource" to upload content.
                   </td>
                 </tr>
               ) : (
-                materials.map(mat => (
-                  <tr key={mat._id} className="hover:bg-secondaryBg/40 transition-colors">
-                    <td className="p-4 font-semibold text-navy">{mat.title}</td>
-                    <td className="p-4 text-muted text-sm max-w-xs truncate" title={mat.description}>{mat.description || '-'}</td>
+                items.map(item => (
+                  <tr key={item._id} className="hover:bg-secondaryBg/40 transition-colors">
+                    <td className="p-4 font-semibold text-navy">{item.title}</td>
+                    <td className="p-4 text-muted text-sm max-w-xs truncate" title={item.description}>{item.description || '-'}</td>
                     <td className="p-4 text-muted font-medium">
-                      <span className="px-2 py-1 bg-secondaryBg text-navy rounded text-[10px] font-bold uppercase">{mat.type || typeId}</span>
+                      <span className="px-2 py-1 bg-secondaryBg text-navy rounded text-[10px] font-bold uppercase">{item.type || typeId}</span>
                     </td>
                     <td className="p-4 flex justify-end gap-2">
-                      {typeId === 'VIDEO' && mat.videoUrl && (
-                        <button onClick={() => setPreviewVideo(mat.videoUrl)} className="p-1.5 text-muted hover:text-primaryBlue transition-colors" title="Play Video">
+                      {typeId === 'VIDEO' && item.videoUrl && (
+                        <button onClick={() => setPreviewVideo(item.videoUrl)} className="p-1.5 text-muted hover:text-primaryBlue transition-colors" title="Play Video">
                           <Play className="w-4 h-4 fill-current" />
                         </button>
                       )}
-                      {typeId === 'NOTES' && mat.fileUrl && (
-                        <button onClick={() => setPreviewDoc(getFileUrl(mat.fileUrl))} className="p-1.5 text-muted hover:text-primaryBlue transition-colors" title="View Document">
+                      {typeId === 'NOTES' && item.fileUrl && (
+                        <button onClick={() => setPreviewDoc(getFileUrl(item.fileUrl))} className="p-1.5 text-muted hover:text-primaryBlue transition-colors" title="View Document">
                           <Icons.Eye className="w-4 h-4" />
                         </button>
                       )}
-                      <button onClick={() => openEditResourceModal(mat, child, typeId)} className="p-1.5 text-muted hover:text-primaryBlue transition-colors"><Edit className="w-4 h-4" /></button>
-                      <button onClick={() => deleteResource(mat._id, mat.title)} className="p-1.5 text-muted hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => openEditResourceModal(item, child, typeId)} className="p-1.5 text-muted hover:text-primaryBlue transition-colors"><Edit className="w-4 h-4" /></button>
+                      <button onClick={() => deleteResource(item._id, item.title, typeId)} className="p-1.5 text-muted hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                     </td>
                   </tr>
                 ))
@@ -1247,7 +1430,7 @@ const ManageCategories = () => {
             </button>
 
             <div className="mb-6 border-b border-borderLine pb-4">
-              <h3 className="text-lg font-bold text-navy">Add New Resource</h3>
+              <h3 className="text-lg font-bold text-navy">{editingResourceId ? 'Update Resource' : 'Add New Resource'}</h3>
               <p className="text-xs text-muted font-medium">Topic: {selectedTopicForResource.title}</p>
             </div>
 
@@ -1319,7 +1502,7 @@ const ManageCategories = () => {
               <div className="flex justify-end pt-4 border-t border-borderLine mt-6">
                 <button type="submit" className="btn-primary px-6 py-3.5 text-xs font-bold bg-primaryBlue hover:bg-navy text-white rounded-lg shadow-md flex items-center gap-2 transition-colors">
                   <Icons.Upload className="w-4 h-4" />
-                  Publish Learning Material to Lesson
+                  {editingResourceId ? 'Update Learning Material' : 'Publish Learning Material to Lesson'}
                 </button>
               </div>
             </form>
@@ -1339,23 +1522,22 @@ const ManageCategories = () => {
             </button>
 
             <div className="mb-6 border-b border-borderLine pb-4">
-              <h3 className="text-lg font-bold text-navy">Add New Resource</h3>
+              <h3 className="text-lg font-bold text-navy">{editingResourceId ? 'Update Question' : 'Add New Question'}</h3>
               <p className="text-xs text-muted font-medium">Topic: {selectedTopicForResource.title}</p>
             </div>
 
             <form onSubmit={saveMcq} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Correct Answer Key *</label>
+                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Question Type *</label>
                   <select
-                    value={mcqForm.correctAnswer}
-                    onChange={(e) => setMcqForm({ ...mcqForm, correctAnswer: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-medicalGreen outline-none focus:border-primaryBlue"
+                    value={mcqForm.type || 'SINGLE'}
+                    onChange={(e) => setMcqForm({ ...mcqForm, type: e.target.value })}
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-primaryBlue"
                   >
-                    <option value="A">Option A (Correct Answer)</option>
-                    <option value="B">Option B (Correct Answer)</option>
-                    <option value="C">Option C (Correct Answer)</option>
-                    <option value="D">Option D (Correct Answer)</option>
+                    <option value="SINGLE">Single Choice</option>
+                    <option value="MULTIPLE">Multiple Choice</option>
+                    <option value="MATRIX">Matrix Match</option>
                   </select>
                 </div>
                 <div>
@@ -1385,51 +1567,125 @@ const ManageCategories = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-secondaryBg/40 border border-borderLine rounded-xl">
-                <div>
-                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Option A Text *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Option A answer choice..."
-                    value={mcqForm.optionA}
-                    onChange={(e) => setMcqForm({ ...mcqForm, optionA: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-medium text-sm text-navy outline-none focus:border-primaryBlue"
-                  />
+              {mcqForm.type !== 'MATRIX' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-secondaryBg/40 border border-borderLine rounded-xl">
+                  {['A', 'B', 'C', 'D'].map(opt => (
+                    <div key={opt}>
+                      <label className="block text-xs font-bold text-navy text-left mb-1.5">Option {opt} Text *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={`Option ${opt} answer choice...`}
+                        value={mcqForm[`option${opt}`]}
+                        onChange={(e) => setMcqForm({ ...mcqForm, [`option${opt}`]: e.target.value })}
+                        className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-medium text-sm text-navy outline-none focus:border-primaryBlue"
+                      />
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Option B Text *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Option B answer choice..."
-                    value={mcqForm.optionB}
-                    onChange={(e) => setMcqForm({ ...mcqForm, optionB: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-medium text-sm text-navy outline-none focus:border-primaryBlue"
-                  />
+              )}
+
+              {mcqForm.type === 'MATRIX' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-secondaryBg/40 border border-borderLine rounded-xl">
+                  <div>
+                    <h4 className="text-xs font-bold text-navy mb-3 uppercase tracking-wider">List I (Left)</h4>
+                    {mcqForm.matrixLeft?.map((item, idx) => (
+                      <div key={item.id} className="mb-3 flex items-center gap-2">
+                        <span className="font-bold text-gray-500 w-6">{item.id}.</span>
+                        <input
+                          type="text"
+                          value={item.text}
+                          onChange={(e) => {
+                            const newLeft = [...mcqForm.matrixLeft];
+                            newLeft[idx].text = e.target.value;
+                            setMcqForm({ ...mcqForm, matrixLeft: newLeft });
+                          }}
+                          className="w-full p-2 rounded bg-white border border-borderLine focus:border-primaryBlue outline-none text-sm"
+                          placeholder="Item text"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-navy mb-3 uppercase tracking-wider">List II (Right)</h4>
+                    {mcqForm.matrixRight?.map((item, idx) => (
+                      <div key={item.id} className="mb-3 flex items-center gap-2">
+                        <span className="font-bold text-gray-500 w-6">{item.id}.</span>
+                        <input
+                          type="text"
+                          value={item.text}
+                          onChange={(e) => {
+                            const newRight = [...mcqForm.matrixRight];
+                            newRight[idx].text = e.target.value;
+                            setMcqForm({ ...mcqForm, matrixRight: newRight });
+                          }}
+                          className="w-full p-2 rounded bg-white border border-borderLine focus:border-primaryBlue outline-none text-sm"
+                          placeholder="Item text"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Option C Text *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Option C answer choice..."
-                    value={mcqForm.optionC}
-                    onChange={(e) => setMcqForm({ ...mcqForm, optionC: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-medium text-sm text-navy outline-none focus:border-primaryBlue"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Option D Text *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Option D answer choice..."
-                    value={mcqForm.optionD}
-                    onChange={(e) => setMcqForm({ ...mcqForm, optionD: e.target.value })}
-                    className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-medium text-sm text-navy outline-none focus:border-primaryBlue"
-                  />
-                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {mcqForm.type === 'SINGLE' && (
+                  <div>
+                    <label className="block text-xs font-bold text-navy text-left mb-1.5">Correct Answer Key *</label>
+                    <select
+                      value={mcqForm.correctAnswer}
+                      onChange={(e) => setMcqForm({ ...mcqForm, correctAnswer: e.target.value })}
+                      className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-medicalGreen outline-none focus:border-primaryBlue"
+                    >
+                      <option value="A">Option A (Correct Answer)</option>
+                      <option value="B">Option B (Correct Answer)</option>
+                      <option value="C">Option C (Correct Answer)</option>
+                      <option value="D">Option D (Correct Answer)</option>
+                    </select>
+                  </div>
+                )}
+
+                {mcqForm.type === 'MULTIPLE' && (
+                  <div>
+                    <label className="block text-xs font-bold text-navy text-left mb-1.5">Correct Answers *</label>
+                    <div className="flex gap-4 p-3 rounded-xl bg-secondaryBg border border-borderLine">
+                      {['A', 'B', 'C', 'D'].map(opt => (
+                        <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={mcqForm.correctAnswers?.includes(opt)}
+                            onChange={() => toggleCorrectAnswer(opt)}
+                            className="w-4 h-4 text-primaryBlue focus:ring-primaryBlue border-gray-300 rounded"
+                          />
+                          <span className="text-sm font-medium text-navy">Opt {opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {mcqForm.type === 'MATRIX' && (
+                  <div className="col-span-2">
+                    <label className="block text-xs font-bold text-navy text-left mb-1.5">Correct Matches *</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-secondaryBg border border-borderLine">
+                      {mcqForm.matrixLeft?.map(left => (
+                        <div key={left.id} className="flex items-center gap-2">
+                          <span className="font-bold text-navy">{left.id} →</span>
+                          <select
+                            value={mcqForm.matrixMatches?.find(m => m.leftId === left.id)?.rightId || ''}
+                            onChange={(e) => handleMatrixMatchChange(left.id, e.target.value)}
+                            className="p-2 rounded bg-white border border-borderLine focus:border-primaryBlue outline-none text-sm w-full"
+                          >
+                            <option value="" disabled>Select</option>
+                            {mcqForm.matrixRight?.map(right => (
+                              <option key={right.id} value={right.id}>{right.id}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1447,14 +1703,87 @@ const ManageCategories = () => {
               <div className="flex justify-end pt-4 border-t border-borderLine mt-6">
                 <button type="submit" className="btn-primary px-6 py-3.5 text-xs font-bold bg-medicalGreen hover:bg-[#1C8A3B] text-white rounded-lg shadow-md flex items-center gap-2 transition-colors">
                   <CheckCircle2 className="w-4 h-4" />
-                  Add Question to Assessment Bank
+                  {editingResourceId ? 'Update Question' : 'Add Question to Assessment Bank'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+      {/* ======================= MODAL 5: FLASHCARD UPLOAD DIALOG ======================= */}
+      {isFlashcardModalOpen && selectedTopicForResource && (
+        <div className="!mt-0 fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-borderLine rounded-xl p-7 lg:p-8 shadow-elevated max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+            <button
+              onClick={() => setIsFlashcardModalOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondaryBg text-muted hover:text-navy transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
+            <div className="mb-6 border-b border-borderLine pb-4">
+              <h3 className="text-lg font-bold text-navy">{editingResourceId ? 'Update Flashcard' : 'Add New Flashcard'}</h3>
+              <p className="text-xs text-muted font-medium">Topic: {selectedTopicForResource.title}</p>
+            </div>
+
+            <form onSubmit={saveFlashcard} className="space-y-6">
+              <div>
+                <label className="block text-xs font-bold text-navy text-left mb-1.5">Front: Term / Concept / Question *</label>
+                <textarea
+                  required
+                  rows={2}
+                  placeholder="e.g., Define Neuroleptic Malignant Syndrome (NMS)..."
+                  value={flashcardForm.frontTerm}
+                  onChange={(e) => setFlashcardForm({ ...flashcardForm, frontTerm: e.target.value })}
+                  className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-semibold text-sm text-navy outline-none focus:border-primaryBlue resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-navy text-left mb-1.5">Back: Definition / Explanation / Answer *</label>
+                <textarea
+                  required
+                  rows={4}
+                  placeholder="e.g., A life-threatening idiosyncratic reaction to neuroleptic drugs characterized by fever, altered mental status, muscle rigidity, and autonomic dysfunction..."
+                  value={flashcardForm.backDefinition}
+                  onChange={(e) => setFlashcardForm({ ...flashcardForm, backDefinition: e.target.value })}
+                  className="w-full p-3.5 rounded-xl bg-white border border-borderLine font-medium text-sm text-navy outline-none focus:border-primaryBlue resize-none"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Category Tag</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Key Termology & Mechanism"
+                    value={flashcardForm.categoryTag}
+                    onChange={(e) => setFlashcardForm({ ...flashcardForm, categoryTag: e.target.value })}
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-medium text-sm text-navy outline-none focus:border-primaryBlue"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-navy text-left mb-1.5">Display Order #</label>
+                  <input
+                    type="number"
+                    placeholder="1"
+                    value={flashcardForm.displayOrder}
+                    onChange={(e) => setFlashcardForm({ ...flashcardForm, displayOrder: parseInt(e.target.value) || 1 })}
+                    className="w-full p-3.5 rounded-xl bg-secondaryBg border border-borderLine font-medium text-sm text-navy outline-none focus:border-primaryBlue"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-borderLine mt-6">
+                <button type="submit" className="btn-primary px-6 py-3.5 text-xs font-bold bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-lg shadow-md flex items-center gap-2 transition-colors">
+                  <CheckCircle2 className="w-4 h-4" />
+                  {editingResourceId ? 'Update Flashcard' : 'Add Flashcard to Deck'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {/* Document Preview Popup Modal */}
       {previewDoc && (
         <div className="!mt-0 fixed inset-0 bg-navy/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -1515,6 +1844,20 @@ const ManageCategories = () => {
                   Your browser does not support the video tag.
                 </video>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmConfig.isOpen && (
+        <div className="!mt-0 fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-borderLine rounded-xl p-7 shadow-elevated max-w-sm w-full">
+            <h3 className="text-lg font-bold text-navy mb-2">{confirmConfig.title}</h3>
+            <p className="text-sm text-muted mb-6">{confirmConfig.message}</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setConfirmConfig({ ...confirmConfig, isOpen: false })} className="btn-secondary text-xs px-5 py-2.5">Cancel</button>
+              <button onClick={confirmConfig.onConfirm} className="btn-primary bg-red-500 hover:bg-red-600 text-xs px-5 py-2.5">Confirm</button>
             </div>
           </div>
         </div>

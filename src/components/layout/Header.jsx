@@ -126,26 +126,19 @@ const Header = () => {
           </Link>
         )}
 
-        {/* Notifications Icon with count badge */}
-        <button className="relative p-2.5 rounded-full bg-secondaryBg border border-borderLine hover:bg-white hover:border-primaryBlue/30 text-navy transition-all duration-200">
-          <Bell className="w-5 h-5 text-navy" />
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#DB2674] text-white font-bold text-[10px] flex items-center justify-center rounded-full shadow-sm animate-bounce">
-            3
-          </span>
-        </button>
-
         {/* User Avatar & Profile Modal Dropdown */}
         <div className="relative">
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-3 p-1.5 pl-2 rounded-full bg-secondaryBg border border-borderLine hover:bg-white transition-all group"
+            className="flex items-center justify-center p-1 rounded-full bg-secondaryBg border border-borderLine hover:bg-white transition-all group"
           >
-            <span className="text-xs font-bold text-navy hidden xl:inline-block pl-1 max-w-[120px] truncate">
-              {user ? user.fullName.split(' ')[0] : 'Resident'} 👋
-            </span>
-            <div className="w-9 h-9 rounded-full bg-primaryBlue text-white font-bold flex items-center justify-center shadow-md overflow-hidden border border-white">
+            <div className="w-10 h-10 rounded-full bg-primaryBlue text-white font-bold flex items-center justify-center shadow-md overflow-hidden border border-white">
               {user?.profileImage ? (
-                <img src={user.profileImage} alt="User" className="w-full h-full object-cover" />
+                <img 
+                  src={user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage} 
+                  alt="User" 
+                  className="w-full h-full object-cover" 
+                />
               ) : (
                 <User className="w-5 h-5" />
               )}
@@ -164,13 +157,6 @@ const Header = () => {
 
               <div className="py-2">
                 <Link
-                  to="/profile"
-                  onClick={() => setShowProfileMenu(false)}
-                  className="px-5 py-2.5 text-sm font-medium text-navy hover:text-primaryBlue hover:bg-secondaryBg/80 flex items-center gap-3 transition-colors"
-                >
-                  <User className="w-4 h-4 text-muted" /> Profile Settings
-                </Link>
-                <Link
                   to="/dashboard"
                   onClick={() => setShowProfileMenu(false)}
                   className="px-5 py-2.5 text-sm font-medium text-navy hover:text-primaryBlue hover:bg-secondaryBg/80 flex items-center gap-3 transition-colors"
@@ -182,7 +168,7 @@ const Header = () => {
                   onClick={() => setShowProfileMenu(false)}
                   className="px-5 py-2.5 text-sm font-medium text-navy hover:text-primaryBlue hover:bg-secondaryBg/80 flex items-center gap-3 transition-colors"
                 >
-                  <SettingsIcon className="w-4 h-4 text-muted" /> Account Preferences
+                  <SettingsIcon className="w-4 h-4 text-muted" /> Account
                 </Link>
               </div>
 
@@ -195,7 +181,7 @@ const Header = () => {
                   }}
                   className="w-full px-5 py-2.5 text-sm font-semibold text-[#DB2674] hover:bg-[#FFF5F9] flex items-center gap-3 transition-colors"
                 >
-                  <LogOut className="w-4 h-4 text-[#DB2674]" /> Logout Securely
+                  <LogOut className="w-4 h-4 text-[#DB2674]" /> Logout
                 </button>
               </div>
             </div>

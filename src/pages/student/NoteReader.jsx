@@ -8,6 +8,7 @@ import PDFFlipbook from '../../components/common/PDFFlipbook.jsx';
 import PDFStandardReader from '../../components/common/PDFStandardReader.jsx';
 import DocxViewer from '../../components/common/DocxViewer.jsx';
 import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const COLORS = [
   { id: 'yellow', value: '#FCD34D' },
@@ -42,6 +43,7 @@ const NoteReader = () => {
   const [hasLoadedAnnotations, setHasLoadedAnnotations] = useState(false);
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
 
   // Load annotations from backend
   useEffect(() => {
@@ -417,12 +419,7 @@ const NoteReader = () => {
                 <div className="w-[1px] h-8 bg-borderLine shrink-0 mx-1" />
                 
                 <button 
-                  onClick={() => {
-                    if (window.confirm('Clear all highlights on the current page?')) {
-                      handleDrawingsUpdate({});
-                      toast.success('All highlights cleared');
-                    }
-                  }}
+                  onClick={() => setConfirmConfig({ isOpen: true })}
                   className="flex flex-col items-center justify-center p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -439,6 +436,21 @@ const NoteReader = () => {
           />
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title="Clear Highlights"
+        message="Are you sure you want to clear all highlights on the current page? This cannot be undone."
+        onConfirm={() => {
+          handleDrawingsUpdate({});
+          toast.success('All highlights cleared');
+          setConfirmConfig({ isOpen: false });
+        }}
+        onCancel={() => setConfirmConfig({ isOpen: false })}
+        confirmText="Clear All"
+        cancelText="Cancel"
+        isDestructive={true}
+      />
     </div>
   );
 };

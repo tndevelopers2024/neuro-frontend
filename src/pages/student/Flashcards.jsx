@@ -15,7 +15,7 @@ const Flashcards = () => {
   const { data: cardData, isLoading } = useQuery({
     queryKey: ['flashcards', topicSlug],
     queryFn: () => api.get(`/flashcards/${topicSlug}`),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const flashcards = cardData?.flashcards || [

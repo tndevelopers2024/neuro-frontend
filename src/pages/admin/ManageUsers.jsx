@@ -1,15 +1,42 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Users, Search, MoreHorizontal, Activity, ShieldCheck, Mail, BookOpen } from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Users, Search, MoreHorizontal, Activity, ShieldCheck, Mail, BookOpen, Trash2 } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import { TableSkeleton } from '../../components/common/Skeleton.jsx';
+import toast from 'react-hot-toast';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const ManageUsers = () => {
+  const queryClient = useQueryClient();
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, userId: null });
+
   const { data, isLoading } = useQuery({
     queryKey: ['adminUsers'],
     queryFn: () => api.get('/admin/users'),
     staleTime: 10 * 1000,
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (userId) => api.delete(`/admin/users/${userId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['adminUsers']);
+      toast.success('User successfully deleted');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete user');
+    }
+  });
+
+  const handleDelete = (userId) => {
+    setConfirmConfig({ isOpen: true, userId });
+  };
+
+  const confirmDelete = () => {
+    if (confirmConfig.userId) {
+      deleteMutation.mutate(confirmConfig.userId);
+    }
+    setConfirmConfig({ isOpen: false, userId: null });
+  };
 
   const users = data?.users || [];
 
@@ -61,7 +88,7 @@ const ManageUsers = () => {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-4">
                           <img 
-                            src={user.profileImage || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'} 
+                            src={user.profileImage ? (user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage) : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'} 
                             alt={user.fullName}
                             className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-200"
                           />
@@ -94,9 +121,21 @@ const ManageUsers = () => {
                         </div>
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <button className="text-gray-400 hover:text-purple-600 transition-colors p-2 rounded-lg hover:bg-purple-50">
-                          <MoreHorizontal className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          {user.role !== 'admin' && (
+                            <button 
+                              onClick={() => handleDelete(user._id)}
+                              disabled={deleteMutation.isLoading}
+                              className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
+                              title="Delete User"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          )}
+                          <button className="text-gray-400 hover:text-purple-600 transition-colors p-2 rounded-lg hover:bg-purple-50">
+                            <MoreHorizontal className="w-5 h-5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -106,6 +145,17 @@ const ManageUsers = () => {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title="Delete User"
+        message="Are you sure you want to permanently delete this user? This cannot be undone."
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmConfig({ isOpen: false, userId: null })}
+        confirmText="Delete User"
+        cancelText="Cancel"
+        isDestructive={true}
+      />
     </div>
   );
 };

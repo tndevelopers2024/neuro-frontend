@@ -22,12 +22,14 @@ import NoteReader from './pages/student/NoteReader.jsx';
 import QuizPlayer from './pages/student/QuizPlayer.jsx';
 import Flashcards from './pages/student/Flashcards.jsx';
 import Dashboard from './pages/student/Dashboard.jsx';
+import Settings from './pages/student/Settings.jsx';
 import Bookmarks from './pages/student/Bookmarks.jsx';
 import MyNotes from './pages/student/MyNotes.jsx';
 
 // Admin Management Portal
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import ManageCategories from './pages/admin/ManageCategories.jsx';
+import ManageQuizzes from './pages/admin/ManageQuizzes.jsx';
 // import ManageTopics from './pages/admin/ManageTopics.jsx'; // Unused, logic moved to ManageCategories
 import ManageUsers from './pages/admin/ManageUsers.jsx';
 
@@ -58,7 +60,7 @@ const App = () => {
         <Route path="my-notes" element={<MyNotes />} />
         <Route path="recent" element={<Dashboard />} />
         <Route path="resources" element={<Dashboard />} />
-        <Route path="settings" element={<Dashboard />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
 
       {/* Admin Portal (Content Management & Hydraulics) */}
@@ -66,8 +68,8 @@ const App = () => {
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="categories" element={<ManageCategories />} />
-        {/* <Route path="topics" element={<ManageTopics />} /> */}
         <Route path="subjects" element={<ManageCategories />} />
+        <Route path="quizzes" element={<ManageQuizzes />} />
         <Route path="users" element={<ManageUsers />} />
       </Route>
 
