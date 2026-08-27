@@ -126,7 +126,6 @@ const Dashboard = () => {
             <h2 className="text-lg font-semibold text-navy flex items-center gap-2">
               <Clock className="w-5 h-5 text-primaryBlue" /> Recent Learning Chronology
             </h2>
-            <Link to="/recent" className="text-xs font-bold text-primaryBlue hover:underline">View Entire History</Link>
           </div>
 
           <div className="space-y-4">

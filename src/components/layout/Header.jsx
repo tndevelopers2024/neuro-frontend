@@ -135,7 +135,7 @@ const Header = () => {
             <div className="w-10 h-10 rounded-full bg-primaryBlue text-white font-bold flex items-center justify-center shadow-md overflow-hidden border border-white">
               {user?.profileImage ? (
                 <img 
-                  src={user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage} 
+                  src={user.profileImage.includes('unsplash') ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=126BEE&color=fff&size=250` : (user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage)} 
                   alt="User" 
                   className="w-full h-full object-cover" 
                 />

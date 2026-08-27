@@ -90,6 +90,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const sendOtp = async (email) => {
+    try {
+      const res = await api.post('/auth/send-otp', { email });
+      toast.success(res.message || 'OTP sent successfully!');
+      return res;
+    } catch (error) {
+      toast.error(error.message || 'Failed to send OTP.');
+      throw error;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('neuromind_token');
     localStorage.removeItem('neuromind_user');
@@ -108,6 +119,7 @@ export const AuthProvider = ({ children }) => {
         isAdmin: user?.role === 'admin',
         login,
         register,
+        sendOtp,
         updateProfile,
         logout,
       }}

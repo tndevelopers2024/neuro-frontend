@@ -41,11 +41,9 @@ const Sidebar = () => {
     { name: 'Home', path: '/', icon: Home },
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Bookmarks', path: '/bookmarks', icon: Bookmark },
-    { name: 'Recent', path: '/recent', icon: Clock },
     { name: 'My Notes', path: '/my-notes', icon: FileText },
     { name: 'Flashcards', path: '/flashcards/all', icon: Layers },
     { name: 'Quiz', path: '/quiz/all', icon: HelpCircle },
-    { name: 'Resources', path: '/resources', icon: BookOpen },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 

@@ -88,7 +88,7 @@ const ManageUsers = () => {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-4">
                           <img 
-                            src={user.profileImage ? (user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage) : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'} 
+                            src={!user.profileImage || user.profileImage.includes('unsplash') ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || 'User')}&background=126BEE&color=fff&size=250` : (user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage)} 
                             alt={user.fullName}
                             className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-200"
                           />

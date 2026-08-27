@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { Settings as SettingsIcon, User, Mail, Briefcase, GraduationCap, Calendar, Save, Key, UserCircle, Upload, Loader2 } from 'lucide-react';
+import { Settings as SettingsIcon, User, Mail, Briefcase, GraduationCap, Calendar, Save, Key, UserCircle, Upload, Loader2, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axiosInstance.js';
 
@@ -14,13 +14,15 @@ const Settings = () => {
     medicalCollege: user?.medicalCollege || '',
     course: user?.course || '',
     year: user?.year || '',
-    profileImage: user?.profileImage ? (user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage) : '',
+    profileImage: user?.profileImage ? (user.profileImage.includes('unsplash') ? '' : (user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage)) : '',
     currentPassword: '',
     newPassword: '',
   });
 
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleChange = (e) => {
@@ -271,25 +273,45 @@ const Settings = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-navy mb-1.5 uppercase tracking-wider">Current Password</label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={formData.currentPassword}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    className="w-full p-3 rounded-xl bg-secondaryBg border border-borderLine focus:bg-white focus:border-primaryBlue outline-none text-sm font-medium transition-all"
-                  />
+                  <div className="relative flex items-center group">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      name="currentPassword"
+                      value={formData.currentPassword}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      className="w-full p-3 pr-12 rounded-xl bg-secondaryBg border border-borderLine focus:bg-white focus:border-primaryBlue outline-none text-sm font-medium transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-4 text-muted hover:text-primaryBlue transition-colors focus:outline-none"
+                      aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-navy mb-1.5 uppercase tracking-wider">New Password</label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    className="w-full p-3 rounded-xl bg-secondaryBg border border-borderLine focus:bg-white focus:border-primaryBlue outline-none text-sm font-medium transition-all"
-                  />
+                  <div className="relative flex items-center group">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      className="w-full p-3 pr-12 rounded-xl bg-secondaryBg border border-borderLine focus:bg-white focus:border-primaryBlue outline-none text-sm font-medium transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-4 text-muted hover:text-primaryBlue transition-colors focus:outline-none"
+                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

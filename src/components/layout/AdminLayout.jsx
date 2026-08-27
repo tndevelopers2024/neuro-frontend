@@ -89,7 +89,7 @@ const AdminLayout = () => {
       </aside>
 
       {/* Admin Workspace */}
-      <div className="flex-1 h-screen overflow-y-auto relative">
+      <div id="main-scroll-container" className="flex-1 h-screen overflow-y-auto relative">
         <Header />
 
         <main className="p-8 max-w-7xl mx-auto w-full">

@@ -5,9 +5,13 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import StudentLayout from './components/layout/StudentLayout.jsx';
 import AdminLayout from './components/layout/AdminLayout.jsx';
 
+// Common Components
+import ScrollToTop from './components/common/ScrollToTop.jsx';
+
 // Auth Screens
 import Login from './pages/student/Login.jsx';
 import Register from './pages/student/Register.jsx';
+import ForgotPassword from './pages/student/ForgotPassword.jsx';
 
 // Student Learning Curriculum Screens (Reference 1, 2, 3, 4)
 import SubjectHome from './pages/student/SubjectHome.jsx';
@@ -35,10 +39,13 @@ import ManageUsers from './pages/admin/ManageUsers.jsx';
 
 const App = () => {
   return (
-    <Routes>
-      {/* Authentication */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Authentication */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Resident Student Application Shell & Medical Mind Maps */}
       <Route path="/" element={<StudentLayout />}>
@@ -75,7 +82,8 @@ const App = () => {
 
       {/* Fallback routing */}
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 };
 

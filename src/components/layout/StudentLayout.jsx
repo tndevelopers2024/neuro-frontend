@@ -18,7 +18,7 @@ const StudentLayout = () => {
       <Sidebar />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 h-screen overflow-y-auto relative">
+      <div id="main-scroll-container" className="flex-1 h-screen overflow-y-auto relative">
         <Header />
         
         <main className="p-6 lg:p-8 max-w-[1600px] mx-auto w-full">

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Layers, ArrowLeft, ArrowRight, RotateCw, Sparkles, Shuffle, BookOpen, Search, X } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
+import Breadcrumb from '../../components/layout/Breadcrumb.jsx';
 
 const Flashcards = () => {
   const { topicSlug = 'all' } = useParams();
@@ -85,31 +86,32 @@ const Flashcards = () => {
     });
 
     return (
-      <div className="space-y-6 animate-fadeIn pb-16 max-w-5xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-[#E9F2FF] rounded-xl text-primaryBlue">
-              <Layers className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-navy">Flashcard Decks</h1>
-              <p className="text-sm font-semibold text-muted mt-1">Select a topic to start an active recall session</p>
-            </div>
+      <div className="space-y-6 animate-fadeIn pb-16 max-w-7xl mx-auto">
+        <Breadcrumb items={[{ title: 'Home', link: '/' }, { title: 'Flashcard Decks' }]} />
+
+        <div className="bg-white border border-borderLine rounded-xl p-7 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-navy tracking-tight flex items-center gap-2.5">
+              <Layers className="w-7 h-7 text-primaryBlue fill-primaryBlue/20" /> Flashcard Decks
+            </h1>
+            <p className="text-sm font-medium text-muted mt-1">
+              Select a clinical topic to start an active recall training session.
+            </p>
           </div>
           
-          <div className="bg-white border border-borderLine rounded-lg p-2 shadow-sm flex items-center gap-2 transition-all focus-within:border-primaryBlue focus-within:ring-2 focus-within:ring-primaryBlue/15 w-full md:w-80">
-            <Search className="w-4 h-4 text-muted ml-2 shrink-0" />
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 text-muted absolute left-3.5 top-3.5 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search topics..."
-              className="w-full bg-transparent border-none text-navy text-sm font-semibold placeholder:text-muted placeholder:font-normal focus:outline-none px-1 py-1"
+              className="w-full pl-10 pr-10 py-2.5 rounded-full bg-secondaryBg border border-borderLine font-medium text-sm text-navy focus:bg-white focus:border-primaryBlue outline-none"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="p-1 text-muted hover:text-navy transition-colors shrink-0"
+                className="absolute right-3.5 top-3.5 text-muted hover:text-navy transition-colors shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -118,13 +120,13 @@ const Flashcards = () => {
         </div>
 
         {topics.length === 0 ? (
-          <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3 bg-white border border-borderLine rounded-xl shadow-soft">
-            <Layers className="w-10 h-10 text-muted" />
+          <div className="py-20 text-center font-bold text-navy flex flex-col items-center gap-3 bg-white border border-borderLine rounded-xl shadow-soft">
+            <Layers className="w-12 h-12 text-gray-300 mb-2" />
             <span>No topics available.</span>
           </div>
         ) : filteredTopics.length === 0 ? (
-          <div className="p-8 text-center font-bold text-navy flex flex-col items-center gap-3 bg-white border border-borderLine rounded-xl shadow-soft">
-            <Search className="w-10 h-10 text-muted" />
+          <div className="py-20 text-center font-bold text-navy flex flex-col items-center gap-3 bg-white border border-borderLine rounded-xl shadow-soft">
+            <Search className="w-12 h-12 text-gray-300 mb-2" />
             <span>No topics found matching "{searchQuery}".</span>
             <button
               onClick={() => setSearchQuery('')}
@@ -134,26 +136,32 @@ const Flashcards = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTopics.map((topic) => (
               <div
                 key={topic._id}
                 onClick={() => navigate(`/flashcards/${topic.slug}`)}
-                className="bg-white border border-borderLine rounded-xl p-6 cursor-pointer hover:shadow-elevated hover:-translate-y-1 transition-all group"
+                className="medical-card flex flex-col justify-between group relative cursor-pointer"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    style={{ backgroundColor: `${topic.color || '#126BEE'}15`, color: topic.color || '#126BEE' }}
-                    className="p-2.5 rounded-lg border border-current/20 group-hover:scale-110 transition-transform"
-                  >
-                    <BookOpen className="w-5 h-5" />
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider bg-[#E9F2FF] text-primaryBlue">
+                      Topic Deck
+                    </span>
+                    <div
+                      style={{ backgroundColor: `${topic.color || '#126BEE'}15`, color: topic.color || '#126BEE' }}
+                      className="p-1.5 rounded-lg border border-current/20 group-hover:scale-110 transition-transform"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                    </div>
                   </div>
+                  <h3 className="text-lg font-bold text-navy group-hover:text-primaryBlue transition-colors line-clamp-1">{topic.title}</h3>
+                  {topic.description && (
+                    <p className="text-xs font-semibold text-muted mt-1 leading-relaxed line-clamp-2">{topic.description}</p>
+                  )}
                 </div>
-                <h3 className="text-lg font-bold text-navy group-hover:text-primaryBlue transition-colors line-clamp-1">{topic.title}</h3>
-                {topic.description && (
-                  <p className="text-xs text-muted mt-2 line-clamp-2 font-medium">{topic.description}</p>
-                )}
-                <div className="mt-5 pt-4 border-t border-borderLine/60 flex items-center justify-between text-xs font-bold text-navy group-hover:text-primaryBlue">
+                
+                <div className="mt-6 pt-4 border-t border-borderLine/70 flex items-center justify-between text-xs font-bold text-primaryBlue group-hover:underline">
                   <span>Start Deck</span>
                   <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
                 </div>

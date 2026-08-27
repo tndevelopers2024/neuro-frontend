@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { Brain, Lock, Mail, ArrowRight, ShieldCheck, UserCheck, Activity } from 'lucide-react';
+import { Brain, Lock, Mail, ArrowRight, ShieldCheck, UserCheck, Activity, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const { login } = useAuth();
@@ -9,6 +9,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -49,7 +50,7 @@ const Login = () => {
     <div className="min-h-screen bg-[#F4F7FC] flex items-center justify-center p-4 md:p-8 select-none relative overflow-hidden">
       
       {/* Main Container - Split Layout */}
-      <div className="w-full max-w-[1200px] bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row relative z-10 animate-fadeIn h-[700px] max-h-screen">
+      <div className="w-full max-w-[1200px] bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row relative z-10 animate-fadeIn h-[800px] max-h-screen">
         
         {/* Left Side: Brand & Visuals (Hidden on small screens) */}
         <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-navy via-[#0c2445] to-primaryBlue p-12 flex-col justify-between relative overflow-hidden text-white">
@@ -123,18 +124,26 @@ const Login = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-xs font-bold text-navy uppercase tracking-wider">Password</label>
-                  <a href="#forgot" onClick={(e) => { e.preventDefault(); alert("For demo accounts, default password is 'password123'."); }} className="text-xs font-bold text-primaryBlue hover:text-[#0D55C2] transition-colors">Forgot Password?</a>
+                  <Link to="/forgot-password" className="text-xs font-bold text-primaryBlue hover:text-[#0D55C2] transition-colors">Forgot Password?</Link>
                 </div>
                 <div className="relative flex items-center group">
                   <Lock className="w-5 h-5 text-muted absolute left-4 pointer-events-none group-focus-within:text-primaryBlue transition-colors" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="Enter your password"
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-gray-50 border border-gray-200 font-medium text-sm text-navy focus:bg-white focus:border-primaryBlue focus:ring-4 focus:ring-primaryBlue/10 outline-none transition-all"
+                    className="w-full pl-12 pr-12 py-3.5 rounded-xl bg-gray-50 border border-gray-200 font-medium text-sm text-navy focus:bg-white focus:border-primaryBlue focus:ring-4 focus:ring-primaryBlue/10 outline-none transition-all"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 text-muted hover:text-primaryBlue transition-colors focus:outline-none"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
 
