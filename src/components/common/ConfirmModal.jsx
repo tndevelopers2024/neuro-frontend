@@ -5,7 +5,7 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy/40 backdrop-blur-sm animate-fadeIn p-4">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-navy/60 backdrop-blur-sm animate-fadeIn p-4">
       <div 
         className="bg-white rounded-2xl shadow-elevated w-full max-w-md overflow-hidden transform transition-all animate-slideUp"
         onClick={(e) => e.stopPropagation()}

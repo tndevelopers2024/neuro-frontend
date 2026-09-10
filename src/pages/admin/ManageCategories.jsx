@@ -7,6 +7,7 @@ import api from '../../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 import { CardSkeleton, TableSkeleton } from '../../components/common/Skeleton.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
+import DocxViewer from '../../components/common/DocxViewer.jsx';
 
 // Curated list of medical and educational Lucide icons with labels for visual dropdown
 const AVAILABLE_ICONS = [
@@ -1798,11 +1799,15 @@ const ManageCategories = () => {
               </button>
             </div>
             <div className="p-0 bg-secondaryBg h-[80vh]">
-              <iframe
-                src={previewDoc}
-                title="Document Preview"
-                className="w-full h-full border-0 rounded-b-2xl"
-              />
+              {previewDoc.match(/\.(docx?|odt)(\?.*)?$/i) ? (
+                <DocxViewer fileUrl={previewDoc} />
+              ) : (
+                <iframe
+                  src={previewDoc}
+                  title="Document Preview"
+                  className="w-full h-full border-0 rounded-b-2xl"
+                />
+              )}
             </div>
           </div>
         </div>

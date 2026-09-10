@@ -253,7 +253,9 @@ const NoteReader = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-navy mb-3">Clinical Document Reader</h3>
                 <p className="text-sm text-muted mb-8 text-center max-w-md leading-relaxed">
-                  Choose your preferred reading mode. Both options provide an immersive, distraction-free full-screen environment.
+                  {material.fileUrl.match(/\.(docx?|odt)(\?.*)?$/i)
+                    ? 'Enter the full-screen clinical reading environment to study this synthesis with interactive highlighters.'
+                    : 'Choose your preferred reading mode. Both options provide an immersive, distraction-free full-screen environment.'}
                 </p>
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <button 
@@ -262,14 +264,30 @@ const NoteReader = () => {
                   >
                     <Maximize2 className="w-4 h-4" /> Open Standard Reader
                   </button>
-                  <button 
-                    onClick={() => toggleFullScreen('flipbook')} 
-                    className="flex items-center justify-center gap-2.5 px-6 py-3.5 bg-white hover:bg-slate-50 text-navy font-bold text-sm rounded-xl border border-borderLine shadow-sm transition-all transform hover:-translate-y-0.5 w-full sm:w-auto"
-                  >
-                    <BookOpen className="w-4 h-4 text-primaryBlue" /> Open Interactive Flipbook
-                  </button>
+                  {!material.fileUrl.match(/\.(docx?|odt)(\?.*)?$/i) && (
+                    <button 
+                      onClick={() => toggleFullScreen('flipbook')} 
+                      className="flex items-center justify-center gap-2.5 px-6 py-3.5 bg-white hover:bg-slate-50 text-navy font-bold text-sm rounded-xl border border-borderLine shadow-sm transition-all transform hover:-translate-y-0.5 w-full sm:w-auto"
+                    >
+                      <BookOpen className="w-4 h-4 text-primaryBlue" /> Open Interactive Flipbook
+                    </button>
+                  )}
                 </div>
               </div>
+            ) : material.fileUrl.match(/\.(docx?|odt)(\?.*)?$/i) ? (
+              <DocxViewer 
+                fileUrl={getFileUrl(material.fileUrl)} 
+                title={material.title}
+                toggleFullScreen={() => toggleFullScreen()}
+                isFullscreen={true}
+                drawings={drawings}
+                setDrawings={handleDrawingsUpdate}
+                isDrawingMode={isDrawingMode}
+                activeColor={activeColor}
+                activeWidth={activeWidth}
+                activeOpacity={activeOpacity}
+                activeTool={activeTool}
+              />
             ) : fullscreenMode === 'flipbook' ? (
               <PDFFlipbook 
                 fileUrl={getFileUrl(material.fileUrl)} 
@@ -428,6 +446,22 @@ const NoteReader = () => {
               </div>
              </div>
             )}
+
+            {/* ConfirmModal placed inside viewerRef so it displays in fullscreen */}
+            <ConfirmModal
+              isOpen={confirmConfig.isOpen}
+              title="Clear Highlights"
+              message="Are you sure you want to clear all highlights on the current page? This cannot be undone."
+              onConfirm={() => {
+                handleDrawingsUpdate({});
+                toast.success('All highlights cleared');
+                setConfirmConfig({ isOpen: false });
+              }}
+              onCancel={() => setConfirmConfig({ isOpen: false })}
+              confirmText="Clear All"
+              cancelText="Cancel"
+              isDestructive={true}
+            />
           </div>
         ) : (
           <div
@@ -436,21 +470,6 @@ const NoteReader = () => {
           />
         )}
       </div>
-
-      <ConfirmModal
-        isOpen={confirmConfig.isOpen}
-        title="Clear Highlights"
-        message="Are you sure you want to clear all highlights on the current page? This cannot be undone."
-        onConfirm={() => {
-          handleDrawingsUpdate({});
-          toast.success('All highlights cleared');
-          setConfirmConfig({ isOpen: false });
-        }}
-        onCancel={() => setConfirmConfig({ isOpen: false })}
-        confirmText="Clear All"
-        cancelText="Cancel"
-        isDestructive={true}
-      />
     </div>
   );
 };
