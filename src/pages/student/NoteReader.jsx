@@ -9,6 +9,7 @@ import PDFStandardReader from '../../components/common/PDFStandardReader.jsx';
 import DocxViewer from '../../components/common/DocxViewer.jsx';
 import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
+import { getAssetUrl } from '../../utils/urlHelper.js';
 
 const COLORS = [
   { id: 'yellow', value: '#FCD34D' },
@@ -18,12 +19,7 @@ const COLORS = [
 ];
 
 const getFileUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('/uploads')) {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    return `${baseUrl.replace('/api', '')}${url}`;
-  }
-  return url;
+  return getAssetUrl(url);
 };
 
 const NoteReader = () => {

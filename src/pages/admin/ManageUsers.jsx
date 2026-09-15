@@ -5,6 +5,7 @@ import api from '../../api/axiosInstance.js';
 import { TableSkeleton } from '../../components/common/Skeleton.jsx';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
+import { getAvatarUrl } from '../../utils/urlHelper.js';
 
 const ManageUsers = () => {
   const queryClient = useQueryClient();
@@ -88,7 +89,7 @@ const ManageUsers = () => {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-4">
                           <img 
-                            src={!user.profileImage || user.profileImage.includes('unsplash') ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || 'User')}&background=126BEE&color=fff&size=250` : (user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage)} 
+                            src={getAvatarUrl(user)} 
                             alt={user.fullName}
                             className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-200"
                           />

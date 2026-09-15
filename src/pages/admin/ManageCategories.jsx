@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { CardSkeleton, TableSkeleton } from '../../components/common/Skeleton.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 import DocxViewer from '../../components/common/DocxViewer.jsx';
+import { getAssetUrl } from '../../utils/urlHelper.js';
 
 // Curated list of medical and educational Lucide icons with labels for visual dropdown
 const AVAILABLE_ICONS = [
@@ -34,12 +35,7 @@ const AVAILABLE_ICONS = [
 ];
 
 const getFileUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('/uploads')) {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    return `${baseUrl.replace('/api', '')}${url}`;
-  }
-  return url;
+  return getAssetUrl(url);
 };
 
 // Complete clinical dictionary of subtopics for all 12 psychiatry domain orbits

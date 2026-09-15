@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, Bell, User, LogOut, Settings as SettingsIcon, LayoutDashboard, Brain, Activity, Compass, Play, FileText, ChevronRight } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { getAvatarUrl } from '../../utils/urlHelper.js';
 
 const Header = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -133,15 +134,11 @@ const Header = () => {
             className="flex items-center justify-center p-1 rounded-full bg-secondaryBg border border-borderLine hover:bg-white transition-all group"
           >
             <div className="w-10 h-10 rounded-full bg-primaryBlue text-white font-bold flex items-center justify-center shadow-md overflow-hidden border border-white">
-              {user?.profileImage ? (
-                <img 
-                  src={user.profileImage.includes('unsplash') ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=126BEE&color=fff&size=250` : (user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage)} 
-                  alt="User" 
-                  className="w-full h-full object-cover" 
-                />
-              ) : (
-                <User className="w-5 h-5" />
-              )}
+              <img 
+                src={getAvatarUrl(user)} 
+                alt={user?.fullName || 'User'} 
+                className="w-full h-full object-cover" 
+              />
             </div>
           </button>
 

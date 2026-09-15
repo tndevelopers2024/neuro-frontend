@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { Settings as SettingsIcon, User, Mail, Briefcase, GraduationCap, Calendar, Save, Key, UserCircle, Upload, Loader2, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axiosInstance.js';
+import { getAssetUrl, getAvatarUrl } from '../../utils/urlHelper.js';
 
 const Settings = () => {
   const { user, updateProfile } = useAuth();
@@ -14,7 +15,7 @@ const Settings = () => {
     medicalCollege: user?.medicalCollege || '',
     course: user?.course || '',
     year: user?.year || '',
-    profileImage: user?.profileImage ? (user.profileImage.includes('unsplash') ? '' : (user.profileImage.startsWith('/uploads') ? `http://localhost:5000${user.profileImage}` : user.profileImage)) : '',
+    profileImage: user?.profileImage ? (user.profileImage.includes('unsplash') ? '' : getAssetUrl(user.profileImage)) : '',
     currentPassword: '',
     newPassword: '',
   });
@@ -38,6 +39,11 @@ const Settings = () => {
     if (!submitData.currentPassword || !submitData.newPassword) {
       delete submitData.currentPassword;
       delete submitData.newPassword;
+    }
+
+    // Keep profileImage clean in database
+    if (submitData.profileImage && submitData.profileImage.includes('/uploads/')) {
+      submitData.profileImage = submitData.profileImage.substring(submitData.profileImage.indexOf('/uploads/'));
     }
 
     try {
@@ -69,8 +75,8 @@ const Settings = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (res.url) {
-        // Backend returns e.g. /uploads/images/xyz.png, we need it as a full API url or relative string that UI can use
-        const fullUrl = res.url.startsWith('http') ? res.url : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${res.url}`;
+        // Backend returns e.g. /uploads/images/xyz.png, resolve to accessible asset URL
+        const fullUrl = getAssetUrl(res.url);
         setFormData((prev) => ({ ...prev, profileImage: fullUrl }));
         toast.success('Image uploaded! Save preferences to apply.');
       }
@@ -89,7 +95,7 @@ const Settings = () => {
         <div className="relative z-10 flex items-center gap-6">
           <div className="w-20 h-20 rounded-2xl bg-white/20 border-2 border-white/40 flex items-center justify-center backdrop-blur-md shadow-inner shrink-0 overflow-hidden">
             {formData.profileImage ? (
-              <img src={formData.profileImage} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={getAssetUrl(formData.profileImage)} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <SettingsIcon className="w-10 h-10 text-white" />
             )}
@@ -119,7 +125,7 @@ const Settings = () => {
             <div className="flex flex-col items-center justify-center gap-4">
               <div className="w-24 h-24 rounded-full bg-secondaryBg border border-borderLine flex items-center justify-center overflow-hidden shadow-inner">
                 {formData.profileImage ? (
-                  <img src={formData.profileImage} alt="Current Avatar" className="w-full h-full object-cover" />
+                  <img src={getAssetUrl(formData.profileImage)} alt="Current Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <User className="w-10 h-10 text-muted" />
                 )}
