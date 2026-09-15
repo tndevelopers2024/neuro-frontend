@@ -132,7 +132,7 @@ const QuizPlayer = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn pb-16 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-sm font-semibold text-primaryBlue hover:underline"
@@ -141,27 +141,27 @@ const QuizPlayer = () => {
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="bg-[#EAF7ED] text-medicalGreen text-xs font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider">
+          <span className="bg-[#EAF7ED] text-medicalGreen text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3.5 py-1 rounded-full uppercase tracking-wider">
             {currentQ.difficulty || 'Clinical Vignette'}
           </span>
-          <span className="bg-secondaryBg text-navy text-xs font-bold px-3 py-1 rounded-full border border-borderLine">
+          <span className="bg-secondaryBg text-navy text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-full border border-borderLine">
             Question {currentIdx + 1} of {mcqs.length}
           </span>
         </div>
       </div>
 
       {/* Main Quiz Board Card */}
-      <div className="bg-white border border-borderLine rounded-xl p-8 md:p-10 shadow-soft relative overflow-hidden">
+      <div className="bg-white border border-borderLine rounded-xl p-5 sm:p-8 md:p-10 shadow-soft relative overflow-hidden">
         {isSubmitted && (
-          <div className="mb-8 p-6 rounded-lg bg-gradient-to-r from-[#F8FAFF] to-[#EAF7ED] border border-borderLine flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Award className="w-12 h-12 text-medicalGreen shrink-0" />
+          <div className="mb-8 p-4 sm:p-6 rounded-lg bg-gradient-to-r from-[#F8FAFF] to-[#EAF7ED] border border-borderLine flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <Award className="w-10 h-10 sm:w-12 sm:h-12 text-medicalGreen shrink-0" />
               <div>
-                <h3 className="text-lg font-semibold text-navy">Assessment Complete! Final Score: {score}%</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-navy">Assessment Complete! Final Score: {score}%</h3>
                 <p className="text-xs font-medium text-muted">Review the correct board explanations highlighted in green below.</p>
               </div>
             </div>
-            <button onClick={resetQuiz} className="btn-secondary text-xs px-4 py-2">
+            <button onClick={resetQuiz} className="btn-secondary text-xs px-4 py-2 self-stretch sm:self-auto justify-center">
               <RotateCcw className="w-3.5 h-3.5" /> Retake Quiz
             </button>
           </div>

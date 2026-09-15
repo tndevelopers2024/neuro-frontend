@@ -177,23 +177,23 @@ const SubjectHome = () => {
       <Breadcrumb items={[{ title: 'Home', link: '/' }, { title: 'Psychiatry Core Domain' }]} />
 
       {/* Hero Header & Switcher */}
-      <div className="bg-white border border-borderLine rounded-xl p-6 lg:p-8 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-white border border-borderLine rounded-xl p-5 sm:p-6 lg:p-8 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
         <div>
           <div className="flex items-center gap-2.5">
             <span className="bg-[#E9F2FF] text-primaryBlue text-[11px] font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> Interactive Medical Platform
             </span>
           </div>
-          <h1 className="text-2xl md:text-4xl font-bold text-navy tracking-tight mt-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-navy tracking-tight mt-2">
             Psychiatry Knowledge Map
           </h1>
         </div>
 
         {/* View Mode Switcher */}
-        <div className="flex items-center gap-2 bg-secondaryBg p-1.5 rounded-lg border border-borderLine self-stretch md:self-auto justify-center">
+        <div className="flex items-center gap-2 bg-secondaryBg p-1.5 rounded-lg border border-borderLine w-full md:w-auto justify-center">
           <button
             onClick={() => setViewMode('MAP')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-semibold transition-all ${
               viewMode === 'MAP' ? 'bg-primaryBlue text-white shadow-md' : 'text-muted hover:text-navy'
             }`}
           >
@@ -202,35 +202,35 @@ const SubjectHome = () => {
           </button>
           <button
             onClick={() => setViewMode('GRID')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-semibold transition-all ${
               viewMode === 'GRID' ? 'bg-primaryBlue text-white shadow-md' : 'text-muted hover:text-navy'
             }`}
           >
             <LayoutGrid className="w-4 h-4" />
-            <span>Grid Study Cards</span>
+            <span>Grid Cards</span>
           </button>
         </div>
       </div>
 
       {/* Search Bar Filter */}
-      <div className="bg-white border border-borderLine rounded-lg p-3 shadow-soft flex items-center gap-3 transition-all focus-within:border-primaryBlue focus-within:ring-2 focus-within:ring-primaryBlue/15">
-        <div className="p-2.5 bg-secondaryBg rounded-xl text-primaryBlue flex items-center justify-center shrink-0">
-          <Search className="w-5 h-5" />
+      <div className="bg-white border border-borderLine rounded-lg p-2.5 sm:p-3 shadow-soft flex items-center gap-2.5 sm:gap-3 transition-all focus-within:border-primaryBlue focus-within:ring-2 focus-within:ring-primaryBlue/15">
+        <div className="p-2 sm:p-2.5 bg-secondaryBg rounded-xl text-primaryBlue flex items-center justify-center shrink-0">
+          <Search className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search domain orbits, clinical topics, or study modules (e.g., ASD, Diagnostics, Schizophrenia)..."
-          className="w-full bg-transparent border-none text-navy text-sm font-semibold placeholder:text-muted placeholder:font-normal focus:outline-none"
+          placeholder="Search domain orbits, clinical topics, or study modules..."
+          className="w-full bg-transparent border-none text-navy text-xs sm:text-sm font-semibold placeholder:text-muted placeholder:font-normal focus:outline-none"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-muted hover:text-navy transition-colors shrink-0 flex items-center gap-1.5 text-xs font-bold px-3"
+            className="p-1.5 sm:p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-muted hover:text-navy transition-colors shrink-0 flex items-center gap-1 text-xs font-bold px-2 sm:px-3"
             title="Clear Search"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Clear</span>
           </button>
         )}
@@ -258,7 +258,7 @@ const SubjectHome = () => {
           <MindMapContainer
             initialNodes={nodes}
             initialEdges={edges}
-            className="h-[750px] lg:h-[820px]"
+            className="h-[500px] sm:h-[650px] lg:h-[820px]"
             onNodeClick={undefined}
           />
         </div>

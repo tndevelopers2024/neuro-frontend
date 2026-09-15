@@ -98,6 +98,37 @@ const DocxViewer = ({
           hideWrapperOnPrint: true,
         });
 
+        // Post-process embedded drawings and images to prevent overlapping content
+        const images = targetEl.querySelectorAll('div > img');
+        images.forEach((img) => {
+          const wrapper = img.parentElement;
+          if (!wrapper) return;
+
+          const parentP = wrapper.closest('p');
+          const isHeading = parentP && (
+            parentP.className?.includes('heading') ||
+            parentP.style?.borderBottom ||
+            /^(\d+\.|\b[A-Z\s]{4,}\b)/.test(parentP.textContent?.trim() || '')
+          );
+
+          // If image was placed inside a heading (due to Word XML anchor position),
+          // move it to the beginning of the following content paragraph so the heading title
+          // and bottom border are completely unobstructed and pristine.
+          if (isHeading && parentP.nextElementSibling) {
+            parentP.nextElementSibling.insertBefore(wrapper, parentP.nextElementSibling.firstChild);
+          }
+
+          // Ensure proper float, margin, and responsive sizing so text wraps with generous spacing
+          wrapper.style.float = 'left';
+          wrapper.style.margin = '6px 20px 14px 0';
+          wrapper.style.display = 'block';
+          wrapper.style.clear = 'left';
+          wrapper.style.zIndex = '1';
+          img.style.display = 'block';
+          img.style.maxWidth = '100%';
+          img.style.height = 'auto';
+        });
+
         // Collect all page sections for DrawingCanvas portals
         const sections = targetEl.querySelectorAll('section.docx');
         sections.forEach((sec, idx) => {
@@ -349,6 +380,37 @@ const DocxViewer = ({
         /* If cell has no explicit border in word, maintain a soft clean separator */
         .docx-preview-root-container table:not([border]) td {
           border: 1px solid rgba(0, 0, 0, 0.12);
+        }
+
+        /* Preserve Embedded Word Document Images, Drawings, and Shapes */
+        .docx-preview-root-container img {
+          max-width: 100% !important;
+          object-fit: contain;
+          vertical-align: middle;
+          border-radius: 2px;
+        }
+
+        .docx-preview-root-container div[style*="display: inline-block"],
+        .docx-preview-root-container div[style*="position: relative"],
+        .docx-preview-root-container div[style*="position: absolute"] {
+          box-sizing: border-box;
+        }
+
+        /* Ensure headings clear preceding floated images cleanly */
+        .docx-preview-root-container p[class*="heading"],
+        .docx-preview-root-container h1,
+        .docx-preview-root-container h2,
+        .docx-preview-root-container h3,
+        .docx-preview-root-container h4 {
+          clear: both !important;
+          width: 100% !important;
+          position: relative !important;
+          z-index: 2;
+        }
+
+        /* Prevent list items and paragraphs from clipping or tucking under floats */
+        .docx-preview-root-container p[class*="docx-num"] {
+          overflow-wrap: break-word;
         }
 
         /* Block Printing Completely */

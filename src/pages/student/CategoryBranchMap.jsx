@@ -147,24 +147,24 @@ const CategoryBranchMap = () => {
         </div>
 
         {/* View Switcher */}
-        <div className="flex items-center gap-2 bg-secondaryBg p-1.5 rounded-lg border border-borderLine self-stretch md:self-auto justify-center">
+        <div className="flex items-center gap-2 bg-secondaryBg p-1.5 rounded-lg border border-borderLine w-full md:w-auto justify-center">
           <button
             onClick={() => setViewMode('GRID_EXPANDS')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-semibold transition-all ${
               viewMode === 'GRID_EXPANDS' ? 'bg-primaryBlue text-white shadow-md' : 'text-muted hover:text-navy'
             }`}
           >
             <LayoutGrid className="w-4 h-4" />
-            <span>Subtopic Grid Cards</span>
+            <span>Grid Cards</span>
           </button>
           <button
             onClick={() => setViewMode('RADIAL_MAP')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-semibold transition-all ${
               viewMode === 'RADIAL_MAP' ? 'bg-primaryBlue text-white shadow-md' : 'text-muted hover:text-navy'
             }`}
           >
             <Network className="w-4 h-4" />
-            <span>Visual Branch Map</span>
+            <span>Branch Map</span>
           </button>
         </div>
       </div>
@@ -175,7 +175,7 @@ const CategoryBranchMap = () => {
           <MindMapContainer
             initialNodes={nodes}
             initialEdges={edges}
-            className="h-[800px] lg:h-[880px]"
+            className="h-[500px] sm:h-[650px] lg:h-[880px]"
             onNodeClick={undefined}
           />
         </div>

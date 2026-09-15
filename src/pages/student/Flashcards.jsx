@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, ArrowLeft, ArrowRight, RotateCw, Sparkles, Shuffle, BookOpen, Search, X } from 'lucide-react';
 import api from '../../api/axiosInstance.js';
 import NeonBrainLoader from '../../components/common/NeonBrainLoader.jsx';
@@ -210,7 +211,7 @@ const Flashcards = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn pb-16 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <button
           onClick={() => navigate('/flashcards/all')}
           className="flex items-center gap-2 text-sm font-semibold text-primaryBlue hover:underline"
@@ -222,65 +223,76 @@ const Flashcards = () => {
         </span>
       </div>
 
-      {/* 3D Interactive CSS Flip Card */}
+      {/* Interactive 3D Card Flip (Crystal-Clear Text with Native 0deg Rest State) */}
       <div
         onClick={() => setIsFlipped(!isFlipped)}
-        className="w-full h-96 [perspective:1200px] cursor-pointer group select-none"
+        className="w-full h-[400px] sm:h-[380px] cursor-pointer group select-none relative"
+        style={{ perspective: 1200 }}
       >
-        <div
-          className={`relative w-full h-full rounded-xl transition-transform duration-500 [transform-style:preserve-3d] shadow-elevated border border-borderLine ${
-            isFlipped ? '[transform:rotateY(180deg)]' : ''
-          }`}
-        >
-          {/* Front Face of Card */}
-          <div className="absolute inset-0 w-full h-full bg-white rounded-xl p-10 flex flex-col justify-between [backface-visibility:hidden]">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider bg-secondaryBg text-muted border border-borderLine">
-                {currentCard.categoryTag || 'Clinical Term'}
-              </span>
-              <span className="text-xs font-bold text-primaryBlue flex items-center gap-1 group-hover:underline">
-                <RotateCw className="w-3.5 h-3.5" /> Click card to flip definition
-              </span>
-            </div>
+        <AnimatePresence initial={false} mode="wait">
+          {!isFlipped ? (
+            <motion.div
+              key={`front-${currIndex}`}
+              initial={{ rotateY: -90, opacity: 0 }}
+              animate={{ rotateY: 0, opacity: 1 }}
+              exit={{ rotateY: 90, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              className="w-full h-full bg-white rounded-2xl p-6 sm:p-8 flex flex-col justify-between border border-borderLine shadow-elevated"
+            >
+              <div className="flex items-center justify-between gap-2 shrink-0">
+                <span className="text-[10px] sm:text-[11px] font-semibold px-2.5 sm:px-3 py-1 rounded-full uppercase tracking-wider bg-secondaryBg text-muted border border-borderLine">
+                  {currentCard.categoryTag || 'Clinical Term'}
+                </span>
+                <span className="text-xs font-bold text-primaryBlue flex items-center gap-1.5 group-hover:underline">
+                  <RotateCw className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Click card to</span> flip
+                </span>
+              </div>
 
-            <div className="text-center my-auto px-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-navy tracking-tight leading-normal">
-                {currentCard.frontTerm}
-              </h2>
-            </div>
+              <div className="flex-1 my-auto flex items-center justify-center py-4 px-2 sm:px-6">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-navy tracking-tight leading-snug text-center">
+                  {currentCard.frontTerm}
+                </h2>
+              </div>
 
-            <div className="text-center pt-4 border-t border-borderLine/60 text-xs font-bold text-muted uppercase tracking-wider">
-              {currentCard.topic?.title || 'Psychiatry Core Curriculum'}
-            </div>
-          </div>
+              <div className="text-center pt-3 sm:pt-4 border-t border-borderLine/60 text-[11px] sm:text-xs font-bold text-muted uppercase tracking-wider shrink-0">
+                {currentCard.topic?.title || 'Psychiatry Core Curriculum'}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={`back-${currIndex}`}
+              initial={{ rotateY: 90, opacity: 0 }}
+              animate={{ rotateY: 0, opacity: 1 }}
+              exit={{ rotateY: -90, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              className="w-full h-full bg-[#FAFCFF] rounded-2xl p-6 sm:p-8 flex flex-col justify-between border-2 border-primaryBlue/30 shadow-elevated"
+            >
+              <div className="flex items-center justify-between gap-2 shrink-0">
+                <span className="bg-[#E9F2FF] text-primaryBlue text-[10px] sm:text-[11px] font-semibold px-2.5 sm:px-3 py-1 rounded-full uppercase tracking-wider">
+                  Clinical Definition & Rationale
+                </span>
+                <span className="text-xs font-bold text-muted flex items-center gap-1.5">
+                  <RotateCw className="w-3.5 h-3.5" /> Flip back
+                </span>
+              </div>
 
-          {/* Back Face of Card (Answer) */}
-          <div className="absolute inset-0 w-full h-full bg-[#FAFCFF] rounded-xl p-10 flex flex-col justify-between [transform:rotateY(180deg)] [backface-visibility:hidden] border border-primaryBlue/30 shadow-inner">
-            <div className="flex items-center justify-between">
-              <span className="bg-[#E9F2FF] text-primaryBlue text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
-                Clinical Definition & Rationale
-              </span>
-              <span className="text-xs font-bold text-muted flex items-center gap-1">
-                <RotateCw className="w-3.5 h-3.5" /> Flip back
-              </span>
-            </div>
+              <div className="flex-1 my-auto flex items-center justify-center py-4 px-2 sm:px-6 overflow-y-auto">
+                <p className="text-base sm:text-lg md:text-xl font-bold text-navy whitespace-pre-line leading-relaxed text-center">
+                  {currentCard.backDefinition}
+                </p>
+              </div>
 
-            <div className="my-auto px-6 overflow-y-auto max-h-56">
-              <p className="text-base md:text-lg font-bold text-navy whitespace-pre-line leading-relaxed text-center">
-                {currentCard.backDefinition}
-              </p>
-            </div>
-
-            <div className="text-center pt-4 border-t border-borderLine/60 text-xs font-semibold text-medicalGreen">
-              ✨ Mastered concept! Use navigation below for next card.
-            </div>
-          </div>
-        </div>
+              <div className="text-center pt-3 sm:pt-4 border-t border-borderLine/60 text-xs font-semibold text-medicalGreen shrink-0">
+                ✨ Mastered concept! Use navigation below for next card.
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Deck Controls */}
-      <div className="flex items-center justify-between pt-4">
-        <button onClick={handlePrev} className="btn-secondary">
+      <div className="flex items-center justify-between pt-4 gap-2">
+        <button onClick={handlePrev} className="btn-secondary text-xs sm:text-sm px-3.5 sm:px-6 py-2.5 sm:py-3">
           <ArrowLeft className="w-4 h-4" /> Previous Card
         </button>
 

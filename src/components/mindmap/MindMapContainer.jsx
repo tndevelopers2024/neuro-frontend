@@ -104,6 +104,7 @@ const MindMapContainer = ({ initialNodes = [], initialEdges = [], onNodeClick, c
         <Background gap={24} size={1} color="#E2E8F0" />
         <Controls className="!bg-white !border !border-borderLine !rounded-xl !shadow-md !overflow-hidden" />
         <MiniMap
+          className="!hidden sm:!block"
           nodeColor={(node) => {
             if (node.type === 'center') return '#126BEE';
             return node.data?.color || '#21A447';
