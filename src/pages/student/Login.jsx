@@ -47,10 +47,10 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7FC] flex items-center justify-center p-4 md:p-8 select-none relative overflow-hidden">
+    <div className="min-h-screen bg-[#F4F7FC] flex items-center justify-center p-4 py-8 sm:py-12 md:p-8 select-none relative">
       
       {/* Main Container - Split Layout */}
-      <div className="w-full max-w-[1200px] bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row relative z-10 animate-fadeIn h-[800px] max-h-screen">
+      <div className="w-full max-w-[1200px] bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row relative z-10 animate-fadeIn h-auto md:h-[800px]">
         
         {/* Left Side: Brand & Visuals (Hidden on small screens) */}
         <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-navy via-[#0c2445] to-primaryBlue p-12 flex-col justify-between relative overflow-hidden text-white">
@@ -89,14 +89,17 @@ const Login = () => {
         </div>
 
         {/* Right Side: Login Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white relative">
+        <div className="w-full md:w-1/2 px-6 py-8 sm:px-10 sm:py-12 md:p-12 flex flex-col justify-center bg-white relative md:overflow-y-auto">
           
           {/* Mobile Header (Only visible on small screens) */}
-          <div className="md:hidden text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-[#E9F2FF] border border-primaryBlue/20 flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Brain className="w-10 h-10 text-primaryBlue animate-pulse" />
-            </div>
-            <h1 className="text-2xl font-bold text-navy tracking-tight">NeuroMind</h1>
+          <div className="md:hidden text-center mb-6 pt-1">
+            <Link to="/" className="inline-block">
+              <img 
+                src="/nuro-logo.png" 
+                alt="NeuroMind Scholars" 
+                className="h-16 sm:h-20 w-auto mx-auto object-contain" 
+              />
+            </Link>
           </div>
 
           <div className="max-w-md w-full mx-auto">

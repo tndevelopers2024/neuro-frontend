@@ -36,8 +36,15 @@ import ManageCategories from './pages/admin/ManageCategories.jsx';
 import ManageQuizzes from './pages/admin/ManageQuizzes.jsx';
 // import ManageTopics from './pages/admin/ManageTopics.jsx'; // Unused, logic moved to ManageCategories
 import ManageUsers from './pages/admin/ManageUsers.jsx';
+import Maintenance from './pages/Maintenance.jsx';
 
 const App = () => {
+  const isMaintenanceMode = true;
+
+  if (isMaintenanceMode) {
+    return <Maintenance />;
+  }
+
   return (
     <>
       <ScrollToTop />
