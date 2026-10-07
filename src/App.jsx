@@ -39,7 +39,7 @@ import ManageUsers from './pages/admin/ManageUsers.jsx';
 import Maintenance from './pages/Maintenance.jsx';
 
 const App = () => {
-  const isMaintenanceMode = true;
+  const isMaintenanceMode = false;
 
   if (isMaintenanceMode) {
     return <Maintenance />;

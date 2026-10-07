@@ -86,7 +86,7 @@ const DocxViewer = ({
           className: 'docx',
           inWrapper: true,
           ignoreWidth: false,
-          ignoreHeight: false,
+          ignoreHeight: true,
           ignoreFonts: false,
           breakPages: true,
           renderHeaders: true,
@@ -419,6 +419,14 @@ const DocxViewer = ({
             display: none !important;
             visibility: hidden !important;
           }
+        }
+
+        /* Fix for docx-preview bug where default span font-size is enormous */
+        .docx-preview-root-container .docx span:not([style*="font-size"]) {
+          font-size: inherit !important;
+        }
+        .docx-preview-root-container .docx span:not([style*="min-height"]) {
+          min-height: auto !important;
         }
       `}</style>
     </div>
